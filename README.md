@@ -7,7 +7,7 @@ Bu gün üçün yalnız **Login / Register / Verify OTP** və **Home** səhifəl
 
 ```
 Register (name, email, password)
-   └─→ Email/Telegram bot OTP kod
+   └─→ Email
         └─→ Verify Email (code)
              └─→ Login (email, password)
                   └─→ Access + Refresh token → Home
