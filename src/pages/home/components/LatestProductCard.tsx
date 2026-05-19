@@ -1,7 +1,6 @@
 import { Tag } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import type { DashboardLatestProduct } from "../../../types/dashboard.type";
-import { formatDate, formatMoney, formatNumber } from "../../../utils/formatters";
 
 type LatestProductCardProps = {
   latestProduct?: DashboardLatestProduct;
@@ -62,7 +61,7 @@ export default function LatestProductCard({
                 </p>
               </div>
               <p className="m-0 text-lg font-semibold text-emerald-700">
-                {formatMoney(latestProduct.price)}
+                {latestProduct.price ? `${latestProduct.price} ₼` : "-"}
               </p>
             </div>
 
@@ -70,13 +69,7 @@ export default function LatestProductCard({
               <div className="rounded-lg bg-slate-50 p-2">
                 <p className="m-0 text-xs text-slate-400">Stok</p>
                 <p className="m-0 mt-1 font-semibold text-slate-900">
-                  {formatNumber(latestProduct.stock)}
-                </p>
-              </div>
-              <div className="rounded-lg bg-slate-50 p-2">
-                <p className="m-0 text-xs text-slate-400">Tarix</p>
-                <p className="m-0 mt-1 font-semibold text-slate-900">
-                  {formatDate(latestProduct.createdAt)}
+                  {latestProduct.stock ?? "-"}
                 </p>
               </div>
               <div className="rounded-lg bg-slate-50 p-2">

@@ -310,7 +310,7 @@ export default function Categories() {
         confirmLoading={saving}
         okText={editingCategory ? "Yenilə" : "Yarat"}
         cancelText="Bağla"
-        destroyOnClose
+        destroyOnHidden
       >
         <Form
           form={form}

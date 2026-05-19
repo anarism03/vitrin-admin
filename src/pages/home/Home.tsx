@@ -12,7 +12,6 @@ import {
 } from "@ant-design/icons";
 import { useAuth } from "../../auth/AuthContext";
 import { getUserDisplayName } from "../../utils/authUser";
-import { formatMoney, formatNumber } from "../../utils/formatters";
 import LatestProductCard from "./components/LatestProductCard";
 import SummaryCard from "./components/SummaryCard";
 import { useDashboardStats } from "./hooks/useDashboardStats";
@@ -22,7 +21,8 @@ export default function Home() {
   const displayName = getUserDisplayName(user);
   const { stats, loading, error, fetchStats } = useDashboardStats();
 
-  const valueOrLoading = (value: string) => (loading ? "..." : value);
+  const valueOrLoading = (value?: number | string) =>
+    loading ? "..." : String(value ?? "-");
   const helperOrLoading = (value: string) => (loading ? "Yüklənir" : value);
 
   const cards = useMemo(
@@ -30,44 +30,42 @@ export default function Home() {
       {
         icon: <AppstoreOutlined />,
         label: "Kateqoriyalar",
-        value: valueOrLoading(formatNumber(stats?.totalCategories)),
-        helper: helperOrLoading(`${formatNumber(stats?.activeCategories)} aktiv`),
+        value: valueOrLoading(stats?.totalCategories),
+        helper: helperOrLoading(`${stats?.activeCategories ?? "-"} aktiv`),
         tone: "blue" as const,
       },
       {
         icon: <ShoppingCartOutlined />,
         label: "Məhsullar",
-        value: valueOrLoading(formatNumber(stats?.totalProducts)),
-        helper: helperOrLoading(`${formatNumber(stats?.activeProducts)} aktiv`),
+        value: valueOrLoading(stats?.totalProducts),
+        helper: helperOrLoading(`${stats?.activeProducts ?? "-"} aktiv`),
         tone: "green" as const,
       },
       {
         icon: <TeamOutlined />,
         label: "İstifadəçilər",
-        value: valueOrLoading(formatNumber(stats?.totalUsers)),
-        helper: helperOrLoading(
-          `${formatNumber(stats?.verifiedUsers)} təsdiqli`,
-        ),
+        value: valueOrLoading(stats?.totalUsers),
+        helper: helperOrLoading(`${stats?.verifiedUsers ?? "-"} təsdiqlənmiş`),
         tone: "slate" as const,
       },
       {
         icon: <DatabaseOutlined />,
         label: "Stok sayı",
-        value: valueOrLoading(formatNumber(stats?.totalStock)),
-        helper: helperOrLoading("Ümumi stok"),
+        value: valueOrLoading(stats?.totalStock),
+        helper: helperOrLoading(" Ümumi stok"),
         tone: "blue" as const,
       },
       {
         icon: <WarningOutlined />,
         label: "Az stok",
-        value: valueOrLoading(formatNumber(stats?.lowStockProducts)),
+        value: valueOrLoading(stats?.lowStockProducts),
         helper: helperOrLoading("Diqqət tələb edir"),
         tone: "amber" as const,
       },
       {
         icon: <DollarOutlined />,
         label: "İnventar dəyəri",
-        value: valueOrLoading(formatMoney(stats?.totalInventoryValue)),
+        value: valueOrLoading(stats?.totalInventoryValue),
         helper: helperOrLoading("Toplam dəyər"),
         tone: "green" as const,
       },

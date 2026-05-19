@@ -1,16 +1,27 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "../components/layout/DashboardLayout";
-import PlaceholderPage from "../pages/admin/PlaceholderPage";
-import Categories from "../pages/categories/Categories";
-import Home from "../pages/home/Home";
-import Login from "../pages/login/Login";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
 
+const Categories = lazy(() => import("../pages/categories/Categories"));
+const Home = lazy(() => import("../pages/home/Home"));
+const Login = lazy(() => import("../pages/login/Login"));
+const PlaceholderPage = lazy(() => import("../pages/admin/PlaceholderPage"));
+
+const routeFallback = (
+  <div className="flex min-h-48 items-center justify-center text-sm font-medium text-slate-500">
+    Yüklənir...
+  </div>
+);
+
+const withSuspense = (children: ReactNode) => (
+  <Suspense fallback={routeFallback}>{children}</Suspense>
+);
+
 const protectedPage = (children: ReactNode) => (
   <PrivateRoute>
-    <DashboardLayout>{children}</DashboardLayout>
+    <DashboardLayout>{withSuspense(children)}</DashboardLayout>
   </PrivateRoute>
 );
 
@@ -21,7 +32,7 @@ export default function AppRoutes() {
         path="/login"
         element={
           <PublicRoute>
-            <Login />
+            {withSuspense(<Login />)}
           </PublicRoute>
         }
       />
