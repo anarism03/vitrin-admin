@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Alert,
   App,
@@ -22,62 +22,33 @@ import {
 import { CategoryService } from "../../services/CategoryService";
 import type { Category, CategoryFormValues } from "../../types/category.type";
 import { getErrorMessage } from "../../utils/getErrorMessage";
-
-
-
-
-const unwrapCategory = (payload: unknown, fallback: Category) => {
-  if (payload && typeof payload === "object" && "data" in payload) {
-    const data = (payload as { data?: Category }).data;
-    if (data) return data;
-  }
-
-  return fallback;
-};
+import { useCategoryList } from "./hooks/useCategoryList";
+import {
+  duplicateCategoryNameMessage,
+  isDuplicateCategoryNameError,
+  unwrapCategory,
+} from "./utils/categoryHelpers";
 
 export default function Categories() {
   const { message, modal } = App.useApp();
   const [form] = Form.useForm<CategoryFormValues>();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
-  const [activeOptionsCount, setActiveOptionsCount] = useState(0);
-  const [searchText, setSearchText] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
-  const fetchCategories = useCallback(async () => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const [listResponse, optionsResponse] = await Promise.all([
-        CategoryService.getAll({
-          page,
-          pageSize,
-          name: searchText.trim() || undefined,
-        }),
-        CategoryService.getOptions(),
-      ]);
-      const { data } = listResponse;
-
-      setCategories(data.data.data);
-      setTotalCount(data.data.totalCount);
-      setActiveOptionsCount(optionsResponse.data.length);
-    } catch (err) {
-      setError(getErrorMessage(err, "Kateqoriyalar yüklənmədi."));
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, searchText]);
-
-  useEffect(() => {
-    void fetchCategories();
-  }, [fetchCategories]);
+  const {
+    activeOptionsCount,
+    categories,
+    error,
+    fetchCategories,
+    loading,
+    page,
+    pageSize,
+    searchText,
+    setPage,
+    totalCount,
+    updatePagination,
+    updateSearchText,
+  } = useCategoryList();
 
   const openCreateModal = () => {
     setEditingCategory(null);
@@ -132,15 +103,26 @@ export default function Categories() {
         message.success("Kateqoriya yeniləndi");
       } else {
         await CategoryService.create(payload);
-        message.success("Kateqoriya yaradıldı");
         setPage(1);
+        message.success("Kateqoriya yaradıldı");
       }
 
       setModalOpen(false);
       setEditingCategory(null);
       form.resetFields();
-      await fetchCategories();
+      await fetchCategories(editingCategory ? undefined : { page: 1 });
     } catch (err) {
+      if (isDuplicateCategoryNameError(err)) {
+        form.setFields([
+          {
+            name: "name",
+            errors: [duplicateCategoryNameMessage],
+          },
+        ]);
+        message.error(duplicateCategoryNameMessage);
+        return;
+      }
+
       message.error(getErrorMessage(err, "Əməliyyat tamamlanmadı."));
     } finally {
       setSaving(false);
@@ -156,13 +138,15 @@ export default function Categories() {
           : "Bu əməliyyat geri qaytarılmır.",
       okText: "Sil",
       okButtonProps: { danger: true },
-      cancelText: "Imtina",
+      cancelText: "İmtina",
       async onOk() {
         try {
           await CategoryService.remove(category.id);
           message.success("Kateqoriya silindi");
+
           if (categories.length === 1 && page > 1) {
-            setPage((currentPage) => currentPage - 1);
+            setPage(page - 1);
+            await fetchCategories({ page: page - 1 });
           } else {
             await fetchCategories();
           }
@@ -210,7 +194,6 @@ export default function Categories() {
           <span className="font-semibold text-slate-900">{count}</span>
         ),
       },
-     
       {
         title: "",
         key: "actions",
@@ -220,7 +203,7 @@ export default function Categories() {
             <Button
               type="text"
               icon={<EditOutlined />}
-              aria-label="Redakte et"
+              aria-label="Redaktə et"
               onClick={() => void openEditModal(record)}
             />
             <Button
@@ -249,7 +232,7 @@ export default function Categories() {
               Kateqoriyalar
             </h2>
             <p className="m-0 mt-1 text-sm text-slate-500">
-              Swaggerdəki kategoriya endpointləri ilə siyahı, yaratma, redaktə və silmə.
+              Kateqoriya siyahısı, yaratma, redaktə və silmə əməliyyatları.
             </p>
           </div>
 
@@ -275,13 +258,10 @@ export default function Categories() {
             prefix={<SearchOutlined className="text-slate-400" />}
             placeholder="Ada görə axtar"
             value={searchText}
-            onChange={(event) => {
-              setPage(1);
-              setSearchText(event.target.value);
-            }}
+            onChange={(event) => updateSearchText(event.target.value)}
             className="sm:!w-64"
           />
-          <Button icon={<ReloadOutlined />} onClick={fetchCategories}>
+          <Button icon={<ReloadOutlined />} onClick={() => fetchCategories()}>
             Yenilə
           </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
@@ -296,7 +276,7 @@ export default function Categories() {
           showIcon
           message={error}
           action={
-            <Button size="small" danger onClick={fetchCategories}>
+            <Button size="small" danger onClick={() => fetchCategories()}>
               Təkrar yoxla
             </Button>
           }
@@ -317,10 +297,7 @@ export default function Categories() {
             showSizeChanger: true,
             pageSizeOptions: [10, 20, 50, 100],
             showTotal: (total) => `${total} kateqoriya`,
-            onChange: (nextPage, nextPageSize) => {
-              setPage(nextPage);
-              setPageSize(nextPageSize);
-            },
+            onChange: updatePagination,
           }}
         />
       </section>
