@@ -15,8 +15,6 @@ export type ResendCodeForm = {
 };
 
 export type LoginForm = {
-  firtstName?: string;
-  lastName?: string;
   email: string;
   password: string;
 };
