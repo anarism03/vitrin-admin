@@ -1,6 +1,7 @@
 import { Tag } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 import type { DashboardLatestProduct } from "../../../types/dashboard.type";
+import { resolveAssetUrl } from "../../../utils/assetUrl";
 
 type LatestProductCardProps = {
   latestProduct?: DashboardLatestProduct;
@@ -11,6 +12,12 @@ export default function LatestProductCard({
   latestProduct,
   loading,
 }: LatestProductCardProps) {
+  const imageUrl =
+    latestProduct?.images?.find((image) => image.isMain)?.url ||
+    latestProduct?.images?.[0]?.url ||
+    latestProduct?.imageUrl ||
+    "";
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -39,9 +46,9 @@ export default function LatestProductCard({
       ) : latestProduct ? (
         <div className="grid gap-3 sm:grid-cols-[120px_1fr] sm:items-center">
           <div className="flex h-28 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-            {latestProduct.imageUrl ? (
+            {imageUrl ? (
               <img
-                src={latestProduct.imageUrl}
+                src={resolveAssetUrl(imageUrl)}
                 alt={latestProduct.name}
                 className="h-full w-full object-cover"
               />

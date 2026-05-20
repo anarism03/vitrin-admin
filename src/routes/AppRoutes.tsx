@@ -7,6 +7,7 @@ import PublicRoute from "./PublicRoute";
 const Categories = lazy(() => import("../pages/categories/Categories"));
 const Home = lazy(() => import("../pages/home/Home"));
 const Login = lazy(() => import("../pages/login/Login"));
+const Products = lazy(() => import("../pages/products/Products"));
 const PlaceholderPage = lazy(() => import("../pages/admin/PlaceholderPage"));
 
 const routeFallback = (
@@ -38,17 +39,7 @@ export default function AppRoutes() {
       />
 
       <Route path="/" element={protectedPage(<Home />)} />
-      <Route
-        path="/products"
-        element={
-          protectedPage(
-            <PlaceholderPage
-              title="Məhsullar"
-              description="Məhsullar siyahısı və redaktə bölməsi."
-            />,
-          )
-        }
-      />
+      <Route path="/products" element={protectedPage(<Products />)} />
       <Route path="/categories" element={protectedPage(<Categories />)} />
       <Route
         path="/users"

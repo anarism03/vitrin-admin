@@ -311,6 +311,7 @@ export default function Categories() {
         okText={editingCategory ? "Yenilə" : "Yarat"}
         cancelText="Bağla"
         destroyOnHidden
+        forceRender
       >
         <Form
           form={form}

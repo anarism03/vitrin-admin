@@ -2,28 +2,11 @@ import { useEffect, useRef } from "react";
 import type { FormInstance } from "antd";
 
 type Options = {
-  /** localStorage-da saxlanmayacaq sahələrin adları (məs: parol) */
   exclude?: string[];
-  /** Yazma əməliyyatları arasında gecikmə (ms) — performans üçün */
   debounceMs?: number;
 };
 
-/**
- * AntD Form üçün avtomatik localStorage saxlanc.
- *
- * Necə işləyir:
- *  - Komponent yükləndikdə → localStorage-dan oxuyub form-a qoyur
- *  - Form dəyəri dəyişdikcə → localStorage-a yazır (debounce ilə)
- *  - Submit uğurlu olduqda → clear() çağıraraq sil
- *
- * İstifadə nümunəsi:
- *   const persist = useFormPersist("register-draft", form, { exclude: ["password"] });
- *   const handleSubmit = async (values) => {
- *     await api.register(values);
- *     persist.clear();   // uğurdan sonra sil
- *   };
- *   <Form onValuesChange={persist.onValuesChange} onFinish={handleSubmit}>
- */
+
 export function useFormPersist<T extends Record<string, any>>(
   storageKey: string,
   form: FormInstance<T>,

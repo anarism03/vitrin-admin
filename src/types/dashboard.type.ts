@@ -1,9 +1,18 @@
+export type DashboardLatestProductImage = {
+  id?: string;
+  url: string;
+  isMain?: boolean;
+  sortOrder?: number;
+  createdAt?: string;
+};
+
 export type DashboardLatestProduct = {
   id: string;
   name: string;
   price: string;
   stock: number;
   imageUrl: string | null;
+  images?: DashboardLatestProductImage[];
   isActive: boolean;
   createdAt: string;
   category: {
