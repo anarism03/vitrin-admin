@@ -37,7 +37,8 @@ export default function CategoryFormModal({
       confirmLoading={saving}
       okText={isEdit ? "Yenilə" : "Yarat"}
       cancelText="Bağla"
-      style={{ top: 16, maxWidth: "calc(100vw - 16px)" }}
+      centered
+      style={{ maxWidth: "calc(100vw - 16px)" }}
       afterOpenChange={(visible) => {
         if (visible) fillForm();
       }}
