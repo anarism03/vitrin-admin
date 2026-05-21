@@ -1,82 +1,125 @@
 import { useRef, useState } from "react";
 import { App, Form, Upload } from "antd";
 import type { UploadProps } from "antd";
-import { ProductService } from "../../../services/ProductService";
-import { UploadService } from "../../../services/UploadService";
+import ProductService from "../../../services/ProductService";
+import UploadService from "../../../services/UploadService";
 import type {
   Product,
   ProductFormValues,
+  ProductImage,
   ProductPayload,
 } from "../../../types/product.type";
 import { resolveAssetUrl } from "../../../utils/assetUrl";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
-import {
-  IMAGE_TYPES,
-  MAX_IMAGE_COUNT,
-  MAX_IMAGE_SIZE,
-  getImages,
-  getUploadError,
-  imagePayload,
-  unwrapProduct,
-} from "../utils/productHelpers";
+
+const MAX_IMAGE_COUNT = 10;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type UseProductFormParams = {
   onSaved: (options: { isCreate: boolean }) => Promise<void> | void;
+};
+
+const unwrapProduct = (data: unknown, fallback: Product): Product => {
+  if (data && typeof data === "object" && "data" in data) {
+    return (data as { data?: Product }).data ?? fallback;
+  }
+
+  return (data as Product) ?? fallback;
+};
+
+const getImages = (product: Product): ProductImage[] => {
+  if (Array.isArray(product.images) && product.images.length) {
+    return [...product.images].sort(
+      (first, second) => (first.sortOrder ?? 0) - (second.sortOrder ?? 0),
+    );
+  }
+
+  return product.imageUrl
+    ? [{ url: product.imageUrl, isMain: true, sortOrder: 0 }]
+    : [];
+};
+
+const imagePayload = (urls: string[]) =>
+  urls.map((url, index) => ({
+    url,
+    sortOrder: index,
+    isMain: index === 0,
+  }));
+
+const getUploadError = (err: unknown) => {
+  const status = (err as { response?: { status?: number } })?.response?.status;
+
+  if (status === 400) return "Şəkil faylları düzgün deyil.";
+  if (status === 401) return "Sessiya bitib. Yenidən daxil olun.";
+  if (status === 413) return "Şəkillərdən biri 5MB limitini keçib.";
+
+  return getErrorMessage(err, "Şəkil yüklənmədi.");
+};
+
+const productValues = (
+  product: Product,
+): Partial<ProductFormValues> => {
+  const price = Number(product.price);
+
+  return {
+    name: product.name,
+    description: product.description || "",
+    price: Number.isFinite(price) ? price : 0,
+    stock: product.stock ?? 0,
+    sku: product.sku,
+    categoryId: product.categoryId,
+    isActive: product.isActive,
+  };
 };
 
 export function useProductForm({ onSaved }: UseProductFormParams) {
   const { message } = App.useApp();
   const [form] = Form.useForm<ProductFormValues>();
   const selectedFilesRef = useRef<File[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [initialValues, setInitialValues] = useState<Partial<ProductFormValues>>({
+    stock: 0,
+    isActive: true,
+  });
 
   const resetModal = () => {
     selectedFilesRef.current = [];
     setImageUrls([]);
-    setEditingProduct(null);
-    setModalOpen(false);
+    setEditingId(null);
+    setInitialValues({ stock: 0, isActive: true });
+    setOpen(false);
     form.resetFields();
   };
 
   const openCreateModal = () => {
     selectedFilesRef.current = [];
-    setEditingProduct(null);
+    setEditingId(null);
     setImageUrls([]);
-    form.resetFields();
-    form.setFieldsValue({ stock: 0, isActive: true });
-    setModalOpen(true);
-  };
-
-  const fillForm = (product: Product) => {
-    const price = Number(product.price);
-
-    form.setFieldsValue({
-      name: product.name,
-      description: product.description || "",
-      price: Number.isFinite(price) ? price : 0,
-      stock: product.stock ?? 0,
-      sku: product.sku,
-      categoryId: product.categoryId,
-      isActive: product.isActive,
-    });
-    setImageUrls(getImages(product).map((image) => image.url));
+    setInitialValues({ stock: 0, isActive: true });
+    setOpen(true);
   };
 
   const openEditModal = async (product: Product) => {
     selectedFilesRef.current = [];
-    setEditingProduct(product);
-    setModalOpen(true);
-    fillForm(product);
+    setEditingId(product.id);
+    setImageUrls(getImages(product).map((image) => image.url));
+    setInitialValues(productValues(product));
+    setOpen(true);
 
     try {
       const { data } = await ProductService.getById(product.id);
       const freshProduct = unwrapProduct(data, product);
-      setEditingProduct(freshProduct);
-      fillForm(freshProduct);
-    } catch {
+      const freshValues = productValues(freshProduct);
+
+      setInitialValues(freshValues);
+      setImageUrls(getImages(freshProduct).map((image) => image.url));
+      form.setFieldsValue(freshValues);
+    } catch (err) {
+      message.warning(getErrorMessage(err, "Məhsul məlumatları yüklənmədi."));
     }
   };
 
@@ -110,8 +153,10 @@ export function useProductForm({ onSaved }: UseProductFormParams) {
     setImageUrls((current) => current.filter((imageUrl) => imageUrl !== url));
   };
 
-  const handleSubmit = async () => {
+  const submit = async () => {
     const values = await form.validateFields();
+    const isCreate = !editingId;
+
     setSaving(true);
 
     try {
@@ -144,15 +189,14 @@ export function useProductForm({ onSaved }: UseProductFormParams) {
         imageUrl: nextImageUrls[0]
           ? resolveAssetUrl(nextImageUrls[0])
           : undefined,
-        images: nextImageUrls.length || editingProduct
-          ? imagePayload(nextImageUrls)
-          : undefined,
+        images:
+          nextImageUrls.length || editingId
+            ? imagePayload(nextImageUrls)
+            : undefined,
       };
 
-      const isCreate = !editingProduct;
-
-      if (editingProduct) {
-        await ProductService.update(editingProduct.id, payload);
+      if (editingId) {
+        await ProductService.update(editingId, payload);
         message.success("Məhsul yeniləndi");
       } else {
         await ProductService.create(payload);
@@ -170,16 +214,18 @@ export function useProductForm({ onSaved }: UseProductFormParams) {
 
   return {
     beforeUpload,
-    editingProduct,
+    editingId,
     form,
-    handleSubmit,
     handleUploadChange,
     imageUrls,
-    modalOpen,
+    initialValues,
+    maxImageCount: MAX_IMAGE_COUNT,
+    open,
     openCreateModal,
     openEditModal,
     removeImage,
     resetModal,
     saving,
+    submit,
   };
 }

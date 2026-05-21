@@ -1,16 +1,11 @@
-import axios, {
-  AxiosError,
-  type AxiosRequestConfig,
-  type InternalAxiosRequestConfig,
-} from "axios";
-import {
-  clearAuthSession,
-  readAccessToken,
-  readRefreshToken,
-  saveAccessToken,
-  saveRefreshToken,
-} from "../auth/authStorage";
+import axios from "axios";
+import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import type { RefreshResponse } from "../types/auth.type";
+import {
+  clearAuthStorage,
+  getAuthTokens,
+  saveAuthTokens,
+} from "../utils/authStorage";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -21,42 +16,8 @@ const axiosInstance = axios.create({
   },
 });
 
-const refreshClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json;charset=utf-8",
-  },
-});
-
-const PUBLIC_AUTH_PATHS = [
-  "/auth/login",
-  "/auth/register",
-  "/auth/verify-email",
-  "/auth/resend-verification-code",
-];
-
-type RetryRequestConfig = AxiosRequestConfig & { _retry?: boolean };
+type RetryRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 type ApiEnvelope<T> = T | { data: T };
-type QueueItem = {
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-};
-
-let isRefreshing = false;
-let pendingQueue: QueueItem[] = [];
-
-const requestUrl = (config?: AxiosRequestConfig) => config?.url || "";
-
-const isPublicAuthRequest = (config?: AxiosRequestConfig) => {
-  const url = requestUrl(config);
-  return PUBLIC_AUTH_PATHS.some((path) => url.includes(path));
-};
-
-const redirectToLogin = () => {
-  if (window.location.pathname !== "/login") {
-    window.location.assign("/login");
-  }
-};
 
 const unwrapResponse = <T>(data: ApiEnvelope<T>): T => {
   if (data && typeof data === "object" && "data" in data) {
@@ -66,21 +27,17 @@ const unwrapResponse = <T>(data: ApiEnvelope<T>): T => {
   return data as T;
 };
 
-const resolveQueue = (token: string) => {
-  pendingQueue.forEach(({ resolve }) => resolve(token));
-  pendingQueue = [];
-};
-
-const rejectQueue = (error: unknown) => {
-  pendingQueue.forEach(({ reject }) => reject(error));
-  pendingQueue = [];
+const redirectToLogin = () => {
+  if (window.location.pathname !== "/login") {
+    window.location.assign("/login");
+  }
 };
 
 axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const accessToken = readAccessToken();
+  const tokens = getAuthTokens();
 
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
+  if (tokens?.accessToken) {
+    config.headers.Authorization = `Bearer ${tokens.accessToken}`;
   }
 
   return config;
@@ -95,78 +52,36 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (isPublicAuthRequest(originalRequest)) {
-      return Promise.reject(error);
-    }
-
-    if (requestUrl(originalRequest).includes("/auth/refresh")) {
-      clearAuthSession();
-      redirectToLogin();
-      return Promise.reject(error);
-    }
-
-    if (originalRequest._retry) {
+    if (originalRequest._retry || originalRequest.url?.includes("/auth/login")) {
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        pendingQueue.push({
-          resolve: (token) => {
-            originalRequest.headers = {
-              ...(originalRequest.headers || {}),
-              Authorization: `Bearer ${token}`,
-            };
-            resolve(axiosInstance(originalRequest));
-          },
-          reject,
-        });
-      });
-    }
-
-    isRefreshing = true;
-
     try {
-      const refreshToken = readRefreshToken();
-      if (!refreshToken) {
-        throw new Error("Refresh token yoxdur");
-      }
+      const tokens = getAuthTokens();
+      if (!tokens?.refreshToken) throw new Error("Refresh token yoxdur");
 
-      const { data } = await refreshClient.post<ApiEnvelope<RefreshResponse>>(
-        "/auth/refresh",
-        { refreshToken },
+      const { data } = await axios.post<ApiEnvelope<RefreshResponse>>(
+        `${API_URL}/auth/refresh`,
+        { refreshToken: tokens.refreshToken },
+        { headers: { "Content-Type": "application/json;charset=utf-8" } },
       );
 
-      const inner = unwrapResponse(data);
-      const newAccessToken = inner.accessToken ?? inner.access_token;
-      const newRefreshToken = inner.refreshToken ?? inner.refresh_token;
+      const payload = unwrapResponse(data);
+      const accessToken = payload.accessToken ?? payload.access_token;
+      const refreshToken = payload.refreshToken ?? payload.refresh_token;
 
-      if (!newAccessToken) {
-        throw new Error("Refresh cavabında access token yoxdur");
-      }
+      if (!accessToken || !refreshToken) throw new Error("Token yenilənmədi");
 
-      saveAccessToken(newAccessToken);
-      if (newRefreshToken) {
-        saveRefreshToken(newRefreshToken);
-      }
-
-      resolveQueue(newAccessToken);
-
-      originalRequest.headers = {
-        ...(originalRequest.headers || {}),
-        Authorization: `Bearer ${newAccessToken}`,
-      };
+      saveAuthTokens({ accessToken, refreshToken });
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
       return axiosInstance(originalRequest);
     } catch (refreshError) {
-      rejectQueue(refreshError);
-      clearAuthSession();
+      clearAuthStorage();
       redirectToLogin();
       return Promise.reject(refreshError);
-    } finally {
-      isRefreshing = false;
     }
   },
 );

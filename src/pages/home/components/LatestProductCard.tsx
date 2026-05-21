@@ -8,21 +8,23 @@ type LatestProductCardProps = {
   loading: boolean;
 };
 
+const getProductImage = (product?: DashboardLatestProduct) =>
+  product?.images?.find((image) => image.isMain)?.url ||
+  product?.images?.[0]?.url ||
+  product?.imageUrl ||
+  "";
+
 export default function LatestProductCard({
   latestProduct,
   loading,
 }: LatestProductCardProps) {
-  const imageUrl =
-    latestProduct?.images?.find((image) => image.isMain)?.url ||
-    latestProduct?.images?.[0]?.url ||
-    latestProduct?.imageUrl ||
-    "";
+  const imageUrl = getProductImage(latestProduct);
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <p className="m-0 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <div className="min-w-0">
+          <p className="m-0 text-xs font-medium uppercase text-slate-400">
             Son əlavə olunan
           </p>
           <h3 className="m-0 mt-1 text-base font-semibold text-slate-950">
@@ -35,7 +37,7 @@ export default function LatestProductCard({
       </div>
 
       {loading ? (
-        <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+        <div className="grid gap-3 sm:grid-cols-[112px_1fr]">
           <div className="h-28 animate-pulse rounded-lg bg-slate-100" />
           <div className="space-y-3 py-1">
             <div className="h-5 w-2/3 animate-pulse rounded bg-slate-100" />
@@ -44,7 +46,7 @@ export default function LatestProductCard({
           </div>
         </div>
       ) : latestProduct ? (
-        <div className="grid gap-3 sm:grid-cols-[120px_1fr] sm:items-center">
+        <div className="grid gap-3 sm:grid-cols-[112px_1fr] sm:items-center">
           <div className="flex h-28 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
             {imageUrl ? (
               <img
@@ -80,9 +82,9 @@ export default function LatestProductCard({
                 </p>
               </div>
               <div className="rounded-lg bg-slate-50 p-2">
-                <p className="m-0 text-xs text-slate-400">ID</p>
+                <p className="m-0 text-xs text-slate-400">Kateqoriya</p>
                 <p className="m-0 mt-1 truncate font-semibold text-slate-900">
-                  {latestProduct.id}
+                  {latestProduct.category?.name || "-"}
                 </p>
               </div>
             </div>

@@ -297,4 +297,3 @@ Bu, kiçik pəncərədə horizontal scroll probleminin qarşısını alır və m
 - Auth məlumatları Redux və localStorage ilə idarə olunur.
 - Ant Design modal, table, form, button və notification komponentləri üçün istifadə olunur.
 - Tailwind CSS layout və responsive görünüş üçün istifadə olunur.
-

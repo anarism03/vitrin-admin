@@ -1,7 +1,7 @@
 import type { UploadProductImagesResponse } from "../types/product.type";
 import axiosInstance from "./axiosInstance";
 
-export const UploadService = {
+const UploadService = {
   productImages: (files: File[]) => {
     const formData = new FormData();
 
@@ -20,3 +20,5 @@ export const UploadService = {
     );
   },
 };
+
+export default UploadService;

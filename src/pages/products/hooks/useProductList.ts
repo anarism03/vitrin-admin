@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { CategoryService } from "../../../services/CategoryService";
-import { ProductService } from "../../../services/ProductService";
+import CategoryService from "../../../services/CategoryService";
+import ProductService from "../../../services/ProductService";
 import type { CategoryOption } from "../../../types/category.type";
 import type { Product } from "../../../types/product.type";
 import { getErrorMessage } from "../../../utils/getErrorMessage";

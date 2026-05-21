@@ -1,8 +1,6 @@
-import { useMemo } from "react";
 import { Alert, Button, Tag } from "antd";
 import {
   AppstoreOutlined,
-  CheckCircleOutlined,
   DatabaseOutlined,
   DollarOutlined,
   ReloadOutlined,
@@ -10,90 +8,52 @@ import {
   TeamOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-import { useAuth } from "../../auth/AuthContext";
+import { useAppSelector } from "../../store/hooks";
 import { getUserDisplayName } from "../../utils/authUser";
 import LatestProductCard from "./components/LatestProductCard";
-import SummaryCard from "./components/SummaryCard";
 import { useDashboardStats } from "./hooks/useDashboardStats";
 
+const statIcons = [
+  <AppstoreOutlined />,
+  <ShoppingCartOutlined />,
+  <TeamOutlined />,
+  <DatabaseOutlined />,
+  <WarningOutlined />,
+  <DollarOutlined />,
+];
+
 export default function Home() {
-  const { user } = useAuth();
-  const displayName = getUserDisplayName(user);
+  const user = useAppSelector((state) => state.auth.user);
   const { stats, loading, error, fetchStats } = useDashboardStats();
+  const displayName = getUserDisplayName(user);
+  const latestProduct = stats?.latestProducts?.[0];
 
-  const valueOrLoading = (value?: number | string) =>
-    loading ? "..." : String(value ?? "-");
-  const helperOrLoading = (value: string) => (loading ? "Yüklənir" : value);
-
-  const cards = useMemo(
-    () => [
-      {
-        icon: <AppstoreOutlined />,
-        label: "Kateqoriyalar",
-        value: valueOrLoading(stats?.totalCategories),
-        helper: helperOrLoading(`${stats?.activeCategories ?? "-"} aktiv`),
-        tone: "blue" as const,
-      },
-      {
-        icon: <ShoppingCartOutlined />,
-        label: "Məhsullar",
-        value: valueOrLoading(stats?.totalProducts),
-        helper: helperOrLoading(`${stats?.activeProducts ?? "-"} aktiv`),
-        tone: "green" as const,
-      },
-      {
-        icon: <TeamOutlined />,
-        label: "İstifadəçilər",
-        value: valueOrLoading(stats?.totalUsers),
-        helper: helperOrLoading(`${stats?.verifiedUsers ?? "-"} təsdiqlənmiş`),
-        tone: "slate" as const,
-      },
-      {
-        icon: <DatabaseOutlined />,
-        label: "Stok sayı",
-        value: valueOrLoading(stats?.totalStock),
-        helper: helperOrLoading(" Ümumi stok"),
-        tone: "blue" as const,
-      },
-      {
-        icon: <WarningOutlined />,
-        label: "Az stok",
-        value: valueOrLoading(stats?.lowStockProducts),
-        helper: helperOrLoading("Diqqət tələb edir"),
-        tone: "amber" as const,
-      },
-      {
-        icon: <DollarOutlined />,
-        label: "İnventar dəyəri",
-        value: valueOrLoading(stats?.totalInventoryValue),
-        helper: helperOrLoading("Toplam dəyər"),
-        tone: "green" as const,
-      },
-    ],
-    [loading, stats],
-  );
+  const cards = [
+    ["Kateqoriyalar", stats?.totalCategories, `${stats?.activeCategories ?? "-"} aktiv`],
+    ["Məhsullar", stats?.totalProducts, `${stats?.activeProducts ?? "-"} aktiv`],
+    ["İstifadəçilər", stats?.totalUsers, `${stats?.verifiedUsers ?? "-"} təsdiqli`],
+    ["Stok", stats?.totalStock, "Ümumi stok"],
+    ["Az stok", stats?.lowStockProducts, "Diqqət tələb edir"],
+    ["İnventar dəyəri", stats?.totalInventoryValue, "Ümumi dəyər"],
+  ];
 
   return (
     <div className="space-y-3">
-      <section className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <Tag color="blue" className="!mb-2 !rounded-md">
+            <Tag color="blue" className="!mb-2">
               {user?.role || "user"}
             </Tag>
             <h2 className="m-0 text-xl font-semibold text-slate-950 sm:text-2xl">
               Salam, {displayName}
             </h2>
-            <p className="m-0 mt-1 text-sm leading-5 text-slate-500">
-              Dashboard statistikaları tokenli sorğu ilə yenilənir.
+            <p className="m-0 mt-1 text-sm text-slate-500">
+              Panel statistikalarını buradan izləyin.
             </p>
           </div>
 
-          <Button
-            icon={loading ? <ReloadOutlined spin /> : <CheckCircleOutlined />}
-            loading={loading}
-            onClick={fetchStats}
-          >
+          <Button icon={<ReloadOutlined />} loading={loading} onClick={fetchStats}>
             Yenilə
           </Button>
         </div>
@@ -113,15 +73,28 @@ export default function Home() {
       ) : null}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-        {cards.map((card) => (
-          <SummaryCard key={card.label} {...card} />
+        {cards.map(([label, value, helper], index) => (
+          <div
+            key={String(label)}
+            className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+          >
+            <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+              {statIcons[index]}
+            </div>
+            <p className="m-0 text-xs font-medium uppercase text-slate-400">
+              {label}
+            </p>
+            <p className="m-0 mt-1 truncate text-base font-semibold text-slate-950">
+              {loading ? "..." : String(value ?? "-")}
+            </p>
+            <p className="m-0 mt-1 truncate text-xs text-slate-500">
+              {loading ? "Yüklənir" : helper}
+            </p>
+          </div>
         ))}
       </div>
 
-      <LatestProductCard
-        loading={loading}
-        latestProduct={stats?.latestProducts?.[0]}
-      />
+      <LatestProductCard latestProduct={latestProduct} loading={loading} />
     </div>
   );
 }

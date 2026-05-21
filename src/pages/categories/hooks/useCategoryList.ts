@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { CategoryService } from "../../../services/CategoryService";
+import CategoryService from "../../../services/CategoryService";
 import type { Category } from "../../../types/category.type";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 
@@ -16,7 +16,6 @@ export function useCategoryList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  const [activeOptionsCount, setActiveOptionsCount] = useState(0);
   const [searchText, setSearchText] = useState("");
 
   const fetchCategories = useCallback(
@@ -29,19 +28,15 @@ export function useCategoryList() {
       setError("");
 
       try {
-        const [listResponse, optionsResponse] = await Promise.all([
-          CategoryService.getAll({
-            page: nextPage,
-            pageSize: nextPageSize,
-            name: nextSearchText.trim() || undefined,
-          }),
-          CategoryService.getOptions(),
-        ]);
-        const { data } = listResponse;
+        const response = await CategoryService.getAll({
+          page: nextPage,
+          pageSize: nextPageSize,
+          name: nextSearchText.trim() || undefined,
+        });
+        const payload = response.data.data;
 
-        setCategories(data.data.data);
-        setTotalCount(data.data.totalCount);
-        setActiveOptionsCount(optionsResponse.data.length);
+        setCategories(payload.data);
+        setTotalCount(payload.totalCount);
       } catch (err) {
         setError(getErrorMessage(err, "Kateqoriyalar yüklənmədi."));
       } finally {
@@ -66,7 +61,6 @@ export function useCategoryList() {
   };
 
   return {
-    activeOptionsCount,
     categories,
     error,
     fetchCategories,

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Alert, App, Button, Empty, Spin } from "antd";
-import { ProductService } from "../../services/ProductService";
+import ProductService from "../../services/ProductService";
 import type { Product } from "../../types/product.type";
 import { getErrorMessage } from "../../utils/getErrorMessage";
 import { ProductFormModal } from "./components/ProductFormModal";
@@ -8,7 +8,6 @@ import { ProductsHeader } from "./components/ProductsHeader";
 import { ProductsTable } from "./components/ProductsTable";
 import { useProductForm } from "./hooks/useProductForm";
 import { useProductList } from "./hooks/useProductList";
-import { isProtectedProduct } from "./utils/productHelpers";
 
 export default function Products() {
   const { message, modal } = App.useApp();
@@ -46,17 +45,12 @@ export default function Products() {
   );
 
   const deleteProduct = (product: Product) => {
-    if (isProtectedProduct(product)) {
-      message.warning("Müəllimin yaratdığı ilkin məhsul silinmir.");
-      return;
-    }
-
     modal.confirm({
       title: "Məhsulu sil?",
       content: "Bu əməliyyat geri qaytarılmır.",
       okText: "Sil",
-      okButtonProps: { danger: true },
       cancelText: "İmtina",
+      okButtonProps: { danger: true },
       async onOk() {
         try {
           await ProductService.remove(product.id);
@@ -65,9 +59,10 @@ export default function Products() {
           if (products.length === 1 && page > 1) {
             setPage(page - 1);
             await fetchProducts({ page: page - 1 });
-          } else {
-            await fetchProducts();
+            return;
           }
+
+          await fetchProducts();
         } catch (err) {
           message.error(getErrorMessage(err, "Məhsul silinmədi."));
         }
@@ -127,14 +122,16 @@ export default function Products() {
       <ProductFormModal
         beforeUpload={productForm.beforeUpload}
         categoryOptions={categoryOptions}
+        editingId={productForm.editingId}
         form={productForm.form}
         imageUrls={productForm.imageUrls}
-        isEditing={Boolean(productForm.editingProduct)}
+        initialValues={productForm.initialValues}
+        maxImageCount={productForm.maxImageCount}
         onCancel={productForm.resetModal}
         onRemoveImage={productForm.removeImage}
-        onSubmit={() => void productForm.handleSubmit()}
+        onSubmit={() => void productForm.submit()}
         onUploadChange={productForm.handleUploadChange}
-        open={productForm.modalOpen}
+        open={productForm.open}
         saving={productForm.saving}
       />
     </div>

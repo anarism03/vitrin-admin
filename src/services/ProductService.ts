@@ -6,7 +6,7 @@ import type {
 } from "../types/product.type";
 import axiosInstance from "./axiosInstance";
 
-export const ProductService = {
+const ProductService = {
   getAll: (params: ProductListParams) =>
     axiosInstance.get<ProductListResponse>("/products", { params }),
   getById: (id: string) => axiosInstance.get<Product>(`/products/${id}`),
@@ -16,3 +16,5 @@ export const ProductService = {
     axiosInstance.patch<Product>(`/products/${id}`, payload),
   remove: (id: string) => axiosInstance.delete(`/products/${id}`),
 };
+
+export default ProductService;

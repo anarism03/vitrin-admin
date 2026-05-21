@@ -32,10 +32,20 @@ export type AuthUser = {
 export type LoginResponse = {
   accessToken: string;
   refreshToken: string;
-  user: AuthUser;
+  user?: AuthUser | null;
   name?: string;
   fullName?: string;
   role?: "admin" | "user";
+};
+
+export type AuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export type AuthSession = AuthTokens & {
+  user: AuthUser | null;
+  userEmail: string;
 };
 
 export type RefreshResponse = {

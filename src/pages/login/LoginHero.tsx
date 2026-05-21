@@ -3,17 +3,16 @@ const HERO_IMAGE =
 
 export default function LoginHero() {
   return (
-    <div className="hidden lg:block lg:col-span-3 relative overflow-hidden">
+    <div className="relative hidden overflow-hidden lg:col-span-3 lg:block">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${HERO_IMAGE}')` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-blue-900/70 to-indigo-900/85" />
 
-      <div className="relative z-10 h-full flex flex-col justify-between p-12 text-white">
-        {/* Logo */}
+      <div className="relative z-10 flex h-full flex-col justify-between p-12 text-white">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-white/15 backdrop-blur-md flex items-center justify-center text-xl font-bold border border-white/20">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/20 bg-white/15 text-xl font-bold backdrop-blur-md">
             A
           </div>
           <div className="flex flex-col">
@@ -24,16 +23,13 @@ export default function LoginHero() {
           </div>
         </div>
 
-        {/* Mərkəz mətn */}
         <div className="max-w-lg space-y-6">
-          <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
+          <h1 className="text-4xl font-bold leading-tight xl:text-5xl">
             Komandanı bir yerdə idarə edin
           </h1>
-          <p className="text-white/80 text-lg leading-relaxed">
-            İdarəetmə sistemi ilə komandanızı effektiv şəkildə idarə edin.
+          <p className="text-lg leading-relaxed text-white/80">
+            İdarəetmə sistemi ilə komandanı effektiv şəkildə idarə edin.
           </p>
-
-          <div className="grid grid-cols-2 gap-4 pt-4"></div>
         </div>
       </div>
     </div>

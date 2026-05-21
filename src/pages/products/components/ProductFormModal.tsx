@@ -12,7 +12,6 @@ import type { FormInstance, UploadProps } from "antd";
 import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
 import type { ProductFormValues } from "../../../types/product.type";
 import { resolveAssetUrl } from "../../../utils/assetUrl";
-import { MAX_IMAGE_COUNT } from "../utils/productHelpers";
 
 const { Dragger } = Upload;
 
@@ -24,9 +23,11 @@ type CategoryOption = {
 type ProductFormModalProps = {
   beforeUpload: UploadProps["beforeUpload"];
   categoryOptions: CategoryOption[];
+  editingId: string | null;
   form: FormInstance<ProductFormValues>;
   imageUrls: string[];
-  isEditing: boolean;
+  initialValues: Partial<ProductFormValues>;
+  maxImageCount: number;
   onCancel: () => void;
   onRemoveImage: (url: string) => void;
   onSubmit: () => void;
@@ -38,9 +39,11 @@ type ProductFormModalProps = {
 export function ProductFormModal({
   beforeUpload,
   categoryOptions,
+  editingId,
   form,
   imageUrls,
-  isEditing,
+  initialValues,
+  maxImageCount,
   onCancel,
   onRemoveImage,
   onSubmit,
@@ -48,27 +51,37 @@ export function ProductFormModal({
   open,
   saving,
 }: ProductFormModalProps) {
-  const remainingSlots = Math.max(MAX_IMAGE_COUNT - imageUrls.length, 0);
+  const isEdit = Boolean(editingId);
+  const remainingSlots = Math.max(maxImageCount - imageUrls.length, 0);
+
+  const fillForm = () => {
+    form.resetFields();
+    form.setFieldsValue(initialValues);
+  };
 
   return (
     <Modal
-      title={isEditing ? "Məhsulu redaktə et" : "Yeni məhsul"}
+      title={isEdit ? "Məhsulu redaktə et" : "Yeni məhsul"}
       open={open}
       onCancel={() => !saving && onCancel()}
       onOk={onSubmit}
       confirmLoading={saving}
-      okText={isEditing ? "Yenilə" : "Yarat"}
+      okText={isEdit ? "Yenilə" : "Yarat"}
       cancelText="Bağla"
-      width={920}
-      style={{ top: 24, maxWidth: "calc(100vw - 32px)" }}
+      width={860}
+      style={{ top: 12, maxWidth: "calc(100vw - 16px)" }}
+      afterOpenChange={(visible) => {
+        if (visible) fillForm();
+      }}
       styles={{
         body: {
-          maxHeight: "calc(100dvh - 180px)",
+          maxHeight: "calc(100dvh - 160px)",
           overflowY: "auto",
-          paddingRight: 8,
+          paddingRight: 4,
         },
       }}
       destroyOnHidden
+      forceRender
     >
       <Form
         form={form}
@@ -77,7 +90,7 @@ export function ProductFormModal({
         preserve={false}
         className="pt-2"
       >
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           <Form.Item
             label="Ad"
             name="name"
@@ -102,12 +115,7 @@ export function ProductFormModal({
             name="price"
             rules={[{ required: true, message: "Qiymət tələb olunur" }]}
           >
-            <InputNumber
-              min={0}
-              precision={2}
-              className="!w-full"
-              placeholder="2499.99"
-            />
+            <InputNumber min={0} precision={2} className="!w-full" />
           </Form.Item>
 
           <Form.Item label="Stok" name="stock" initialValue={0}>
@@ -131,7 +139,6 @@ export function ProductFormModal({
             label="Status"
             name="isActive"
             valuePropName="checked"
-            initialValue
           >
             <Switch checkedChildren="Aktiv" unCheckedChildren="Passiv" />
           </Form.Item>
@@ -141,7 +148,7 @@ export function ProductFormModal({
           <Input.TextArea rows={2} maxLength={500} showCount />
         </Form.Item>
 
-        <Form.Item label="Şəkillər (maks. 10)">
+        <Form.Item label={`Şəkillər (maks. ${maxImageCount})`}>
           <ImagePreviewList urls={imageUrls} onRemove={onRemoveImage} />
 
           <Dragger
@@ -151,15 +158,13 @@ export function ProductFormModal({
             multiple
             onChange={onUploadChange}
             listType="picture"
-            disabled={imageUrls.length >= MAX_IMAGE_COUNT}
+            disabled={imageUrls.length >= maxImageCount}
           >
             <p className="ant-upload-drag-icon">
               <InboxOutlined />
             </p>
             <p className="ant-upload-text">Şəkil seç</p>
-            <p className="ant-upload-hint">
-              JPG, PNG, WEBP. Hər fayl maksimum 5MB.
-            </p>
+            <p className="ant-upload-hint">JPG, PNG, WEBP. Fayl maksimum 5MB.</p>
           </Dragger>
         </Form.Item>
       </Form>

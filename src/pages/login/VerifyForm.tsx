@@ -1,8 +1,11 @@
 import { Button, Form, Input } from "antd";
-import { MailOutlined, SafetyCertificateOutlined, SendOutlined } from "@ant-design/icons";
+import {
+  MailOutlined,
+  SafetyCertificateOutlined,
+  SendOutlined,
+} from "@ant-design/icons";
 import type { FormInstance } from "antd";
 import type { VerifyEmailForm } from "../../types/auth.type";
-import { useFormPersist } from "../../utils/useFormPersist";
 
 type Props = {
   form: FormInstance<VerifyEmailForm>;
@@ -22,26 +25,23 @@ const BTN_STYLE = {
   boxShadow: "0 6px 16px rgba(37, 99, 235, 0.25)",
 };
 
-export default function VerifyForm({ form, loading, resendLoading, onSubmit, onResend }: Props) {
-  const persist = useFormPersist<VerifyEmailForm>("draft:verify", form, {
-    exclude: ["code"],
-  });
-
-  const handleFinish = (values: VerifyEmailForm) => {
-    onSubmit(values);
-  };
-
+export default function VerifyForm({
+  form,
+  loading,
+  resendLoading,
+  onSubmit,
+  onResend,
+}: Props) {
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={handleFinish}
-      onValuesChange={persist.onValuesChange}
+      onFinish={onSubmit}
       requiredMark={false}
       size="large"
     >
       <Form.Item
-        label={<span className="text-slate-700 font-medium">Email</span>}
+        label={<span className="font-medium text-slate-700">Email</span>}
         name="email"
         rules={[
           { required: true, message: "Email tələb olunur" },
@@ -52,7 +52,7 @@ export default function VerifyForm({ form, loading, resendLoading, onSubmit, onR
       </Form.Item>
 
       <Form.Item
-        label={<span className="text-slate-700 font-medium">Təsdiq kodu</span>}
+        label={<span className="font-medium text-slate-700">Təsdiq kodu</span>}
         name="code"
         rules={[
           { required: true, message: "Kod tələb olunur" },
@@ -63,16 +63,33 @@ export default function VerifyForm({ form, loading, resendLoading, onSubmit, onR
           prefix={<SafetyCertificateOutlined className="text-slate-400" />}
           placeholder="6 rəqəmli kod"
           maxLength={8}
-          style={{ ...INPUT_STYLE, letterSpacing: 4, fontSize: 17, fontWeight: 600 }}
+          style={{
+            ...INPUT_STYLE,
+            letterSpacing: 4,
+            fontSize: 17,
+            fontWeight: 600,
+          }}
         />
       </Form.Item>
 
-      <Button type="primary" htmlType="submit" loading={loading} block style={BTN_STYLE}>
+      <Button
+        type="primary"
+        htmlType="submit"
+        loading={loading}
+        block
+        style={BTN_STYLE}
+      >
         Təsdiqlə
       </Button>
 
-      <div className="flex items-center justify-center mt-4">
-        <Button type="link" icon={<SendOutlined />} onClick={onResend} loading={resendLoading} style={{ padding: 0 }}>
+      <div className="mt-4 flex items-center justify-center">
+        <Button
+          type="link"
+          icon={<SendOutlined />}
+          onClick={onResend}
+          loading={resendLoading}
+          style={{ padding: 0 }}
+        >
           Kodu yenidən göndər
         </Button>
       </div>

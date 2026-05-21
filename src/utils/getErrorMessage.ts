@@ -37,9 +37,7 @@ export function isEmailNotVerifiedError(err: unknown): boolean {
     "verify email",
     "email verification",
     "təsdiq",
-    "tesdiq",
     "təsdiqlənməyib",
-    "tesdiqlenmeyib",
   ].some((part) => message.includes(part));
 }
 

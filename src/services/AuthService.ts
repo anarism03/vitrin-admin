@@ -5,10 +5,9 @@ import type {
   RegisterForm,
   ResendCodeForm,
   VerifyEmailForm,
-  AuthUser,
 } from "../types/auth.type";
 
-export const AuthService = {
+const AuthService = {
   register: (payload: RegisterForm) =>
     axiosInstance.post("/auth/register", payload),
 
@@ -23,5 +22,9 @@ export const AuthService = {
 
   logout: () => axiosInstance.post("/auth/logout"),
 
+  profile: () => axiosInstance.get("/auth/profile"),
+
   me: () => axiosInstance.get("/auth/profile"),
 };
+
+export default AuthService;

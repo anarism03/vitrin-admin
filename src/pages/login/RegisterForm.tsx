@@ -2,7 +2,6 @@ import { Button, Form, Input } from "antd";
 import { LockOutlined, MailOutlined, UserOutlined } from "@ant-design/icons";
 import type { FormInstance } from "antd";
 import type { RegisterForm as RegisterFormType } from "../../types/auth.type";
-import { useFormPersist } from "../../utils/useFormPersist";
 
 type Props = {
   form: FormInstance<RegisterFormType>;
@@ -28,20 +27,11 @@ export default function RegisterForm({
   onSubmit,
   onGoLogin,
 }: Props) {
-  const persist = useFormPersist<RegisterFormType>("draft:register", form, {
-    exclude: ["password"],
-  });
-
-  const handleFinish = (values: RegisterFormType) => {
-    onSubmit(values);
-  };
-
   return (
     <Form
       form={form}
       layout="vertical"
-      onFinish={handleFinish}
-      onValuesChange={persist.onValuesChange}
+      onFinish={onSubmit}
       requiredMark={false}
       size="large"
     >
@@ -73,7 +63,7 @@ export default function RegisterForm({
         >
           <Input
             prefix={<UserOutlined className="text-slate-400" />}
-            placeholder="İsmayılzadə"
+            placeholder="Ismayilzade"
             style={INPUT_STYLE}
           />
         </Form.Item>
@@ -90,7 +80,7 @@ export default function RegisterForm({
       >
         <Input
           prefix={<MailOutlined className="text-slate-400" />}
-          placeholder="ad@nümunə.com"
+          placeholder="ad@numune.com"
           style={INPUT_STYLE}
         />
       </Form.Item>
@@ -112,7 +102,13 @@ export default function RegisterForm({
         />
       </Form.Item>
 
-      <Button type="primary" htmlType="submit" loading={loading} block style={BTN_STYLE}>
+      <Button
+        type="primary"
+        htmlType="submit"
+        loading={loading}
+        block
+        style={BTN_STYLE}
+      >
         Hesab yarat
       </Button>
 

@@ -7,7 +7,7 @@ import type {
 } from "../types/category.type";
 import axiosInstance from "./axiosInstance";
 
-export const CategoryService = {
+const CategoryService = {
   getAll: (params: CategoryListParams) =>
     axiosInstance.get<CategoryListResponse>("/categories", { params }),
   getOptions: () => axiosInstance.get<CategoryOption[]>("/categories/options"),
@@ -18,3 +18,5 @@ export const CategoryService = {
     axiosInstance.patch<CategoryResponse>(`/categories/${id}`, payload),
   remove: (id: string) => axiosInstance.delete<CategoryResponse>(`/categories/${id}`),
 };
+
+export default CategoryService;

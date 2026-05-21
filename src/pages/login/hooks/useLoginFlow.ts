@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { App, Form } from "antd";
-import { useAuth } from "../../../auth/AuthContext";
-import { AuthService } from "../../../services/AuthService";
+import AuthService from "../../../services/AuthService";
+import { setAuthSession, setAuthUser } from "../../../store/authSlice";
+import { useAppDispatch } from "../../../store/hooks";
 import type {
+  AuthSession,
   AuthUser,
   LoginForm as LoginFormType,
   LoginResponse,
@@ -35,8 +37,8 @@ const titles: Record<LoginMode, { title: string; subtitle: string }> = {
 };
 
 export function useLoginFlow() {
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { loginWithTokens, setUser } = useAuth();
   const { message } = App.useApp();
 
   const [mode, setMode] = useState<LoginMode>("login");
@@ -54,36 +56,45 @@ export function useLoginFlow() {
     setMode("verify");
   };
 
+  const makeSession = (
+    response: LoginResponse,
+    email: string,
+  ): AuthSession => {
+    const user =
+      response.user ??
+      (extractUser(response) as AuthUser | null) ??
+      ({ id: email, email } as AuthUser);
+
+    return {
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+      user,
+      userEmail: email,
+    };
+  };
+
   const handleLogin = async (values: LoginFormType) => {
     setLoading(true);
 
     try {
       const res = await AuthService.login(values);
-      const inner = unwrap<any>(res.data);
-      const loginUser = extractUser(res.data);
-      const payload: LoginResponse = {
-        accessToken: inner.accessToken ?? inner.access_token,
-        refreshToken: inner.refreshToken ?? inner.refresh_token,
-        user:
-          (loginUser as AuthUser) ??
-          ({ id: 0, email: values.email } as AuthUser),
-      };
+      const inner = unwrap<LoginResponse>(res.data);
+      const session = makeSession(inner, values.email);
 
-      if (!payload.accessToken) {
+      if (!session.accessToken || !session.refreshToken) {
         throw new Error("Server cavabında token tapılmadı.");
       }
 
-      loginWithTokens(payload);
+      dispatch(setAuthSession(session));
 
       try {
         const profileRes = await AuthService.me();
         const profileUser = extractUser(profileRes.data);
-        if (profileUser) setUser(profileUser as AuthUser);
+        if (profileUser) dispatch(setAuthUser(profileUser as AuthUser));
       } catch {
-        // Login response-da olan user ilə davam etmək kifayətdir.
+        // Login cavabındakı user ilə davam etmək kifayətdir.
       }
 
-      localStorage.removeItem("draft:login");
       message.success("Xoş gəlmisiniz!");
       navigate("/", { replace: true });
     } catch (err) {
@@ -104,7 +115,6 @@ export function useLoginFlow() {
 
     try {
       await AuthService.register(values);
-      localStorage.removeItem("draft:register");
       openVerifyForm(values.email);
       message.success("Təsdiq kodu göndərildi");
     } catch (err) {
@@ -119,7 +129,6 @@ export function useLoginFlow() {
 
     try {
       await AuthService.verifyEmail(values);
-      localStorage.removeItem("draft:verify");
       loginFormInstance.setFieldsValue({ email: values.email, password: "" });
       message.success("Hesab təsdiqləndi");
       setMode("login");
