@@ -45,16 +45,19 @@ export function useCategoryList() {
 
   useEffect(() => {
     void fetchCategories();
-  }, [fetchCategories]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateSearchText = (value: string) => {
     setPage(1);
     setSearchText(value);
+    void fetchCategories({ page: 1, searchText: value });
   };
 
   const updatePagination = (nextPage: number, nextPageSize: number) => {
     setPage(nextPage);
     setPageSize(nextPageSize);
+    void fetchCategories({ page: nextPage, pageSize: nextPageSize });
   };
 
   return {

@@ -56,21 +56,25 @@ export function useProductList() {
 
   useEffect(() => {
     void fetchProducts();
-  }, [fetchProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateSearchText = (value: string) => {
     setPage(1);
     setSearchText(value);
+    void fetchProducts({ page: 1, searchText: value });
   };
 
   const updateCategoryId = (value?: string) => {
     setPage(1);
     setCategoryId(value);
+    void fetchProducts({ page: 1, categoryId: value });
   };
 
   const updatePagination = (nextPage: number, nextPageSize: number) => {
     setPage(nextPage);
     setPageSize(nextPageSize);
+    void fetchProducts({ page: nextPage, pageSize: nextPageSize });
   };
 
   return {

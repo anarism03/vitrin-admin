@@ -27,7 +27,8 @@ export function useDashboardStats() {
     if (loaded.current) return;
     loaded.current = true;
     void fetchStats();
-  }, [fetchStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     stats,
