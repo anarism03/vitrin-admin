@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import CategoryService from "../../../services/CategoryService";
 import ProductService from "../../../services/ProductService";
 import type { CategoryOption } from "../../../types/category.type";
@@ -23,8 +23,7 @@ export function useProductList() {
   const [searchText, setSearchText] = useState("");
   const [categoryId, setCategoryId] = useState<string | undefined>();
 
-  const fetchProducts = useCallback(
-    async (overrides: FetchOverrides = {}) => {
+  const fetchProducts = async (overrides: FetchOverrides = {}) => {
       const nextPage = overrides.page ?? page;
       const nextPageSize = overrides.pageSize ?? pageSize;
       const nextSearchText = overrides.searchText ?? searchText;
@@ -53,9 +52,7 @@ export function useProductList() {
       } finally {
         setLoading(false);
       }
-    },
-    [categoryId, page, pageSize, searchText],
-  );
+    };
 
   useEffect(() => {
     void fetchProducts();

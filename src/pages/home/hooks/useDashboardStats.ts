@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DashboardService from "../../../services/DashboardService";
 import type { DashboardStats } from "../../../types/dashboard.type";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
@@ -9,7 +9,7 @@ export function useDashboardStats() {
   const [error, setError] = useState("");
   const loaded = useRef(false);
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = async () => {
     setLoading(true);
     setError("");
 
@@ -21,7 +21,7 @@ export function useDashboardStats() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (loaded.current) return;

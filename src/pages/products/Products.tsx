@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+
 import { Alert, App, Button, Empty, Spin } from "antd";
 import ProductService from "../../services/ProductService";
 import type { Product } from "../../types/product.type";
@@ -35,14 +35,10 @@ export default function Products() {
     },
   });
 
-  const categoryOptions = useMemo(
-    () =>
-      categories.map((category) => ({
-        value: category.id,
-        label: category.name,
-      })),
-    [categories],
-  );
+  const categoryOptions = categories.map((category) => ({
+    value: category.id,
+    label: category.name,
+  }));
 
   const deleteProduct = (product: Product) => {
     modal.confirm({

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import CategoryService from "../../../services/CategoryService";
 import type { Category } from "../../../types/category.type";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
@@ -18,8 +18,7 @@ export function useCategoryList() {
   const [totalCount, setTotalCount] = useState(0);
   const [searchText, setSearchText] = useState("");
 
-  const fetchCategories = useCallback(
-    async (overrides: FetchOverrides = {}) => {
+  const fetchCategories = async (overrides: FetchOverrides = {}) => {
       const nextPage = overrides.page ?? page;
       const nextPageSize = overrides.pageSize ?? pageSize;
       const nextSearchText = overrides.searchText ?? searchText;
@@ -42,9 +41,7 @@ export function useCategoryList() {
       } finally {
         setLoading(false);
       }
-    },
-    [page, pageSize, searchText],
-  );
+    };
 
   useEffect(() => {
     void fetchCategories();

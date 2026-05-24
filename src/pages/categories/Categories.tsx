@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+
 import { Alert, App, Button, Input, Pagination, Space, Table, Tag } from "antd";
 import type { TableProps } from "antd";
 import {
@@ -63,8 +63,7 @@ export default function Categories() {
     });
   };
 
-  const columns = useMemo<TableProps<Category>["columns"]>(
-    () => [
+  const columns: TableProps<Category>["columns"] = [
       {
         title: "Ad",
         dataIndex: "name",
@@ -113,9 +112,7 @@ export default function Categories() {
           </Space>
         ),
       },
-    ],
-    [categoryForm, categories.length, fetchCategories, page],
-  );
+    ];
 
   return (
     <div className="space-y-3">
