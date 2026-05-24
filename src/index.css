@@ -62,6 +62,33 @@ button:not([class*="ant-"]):focus-visible {
     transform 220ms ease !important;
 }
 
+.app-sidebar.ant-layout-sider-collapsed .ant-menu {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-sidebar.ant-layout-sider-collapsed .ant-menu-item {
+  align-items: center !important;
+  display: flex !important;
+  height: 48px !important;
+  justify-content: center !important;
+  line-height: 48px !important;
+  margin: 4px auto !important;
+  padding-inline: 0 !important;
+  width: 56px !important;
+}
+
+.app-sidebar.ant-layout-sider-collapsed .ant-menu-item-icon {
+  font-size: 16px !important;
+  line-height: 1 !important;
+  margin-inline-end: 0 !important;
+}
+
+.app-sidebar.ant-layout-sider-collapsed .ant-menu-title-content {
+  display: none !important;
+}
+
 .sidebar-backdrop {
   animation: sidebar-backdrop-in 220ms ease-out both;
 }

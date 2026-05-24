@@ -118,7 +118,11 @@ export default function Layout({ children }: LayoutProps) {
         }}
       >
         <div className="flex h-full flex-col border-r border-slate-200">
-          <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-4">
+          <div
+            className={`flex h-16 items-center border-b border-slate-200 ${
+              collapsed && !isMobile ? "justify-center px-0" : "gap-3 px-4"
+            }`}
+          >
             <Avatar shape="square" className="!bg-blue-600">
               A
             </Avatar>
@@ -127,7 +131,7 @@ export default function Layout({ children }: LayoutProps) {
                 <p className="m-0 truncate text-sm font-semibold text-slate-950">
                   Admin Panel
                 </p>
-                <p className="m-0 text-xs text-slate-500">v1.0.0</p>
+               
               </div>
             )}
           </div>

@@ -58,7 +58,7 @@ export function ProductsTable({
       title: "Qiymət",
       dataIndex: "price",
       render: (price: Product["price"]) => (
-        <span className="font-semibold">{price} AZN</span>
+        <span className="font-semibold">{price} ₼</span>
       ),
     },
     { title: "Stok", dataIndex: "stock", width: 90 },
@@ -209,7 +209,7 @@ function ProductMobileCard({
             <div className="rounded-md bg-slate-50 px-2 py-1.5">
               <p className="m-0 text-slate-400">Qiymət</p>
               <p className="m-0 truncate font-semibold text-slate-900">
-                {product.price} AZN
+                {product.price} ₼
               </p>
             </div>
             <div className="rounded-md bg-slate-50 px-2 py-1.5">
