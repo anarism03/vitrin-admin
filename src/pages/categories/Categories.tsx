@@ -1,4 +1,4 @@
-
+import React from "react";
 import { Alert, App, Button, Input, Pagination, Space, Table, Tag } from "antd";
 import type { TableProps } from "antd";
 import {
@@ -37,7 +37,7 @@ export default function Categories() {
     },
   });
 
-  const deleteCategory = (category: Category) => {
+  const deleteCategory = async (category: Category) => {
     modal.confirm({
       title: "Kateqoriyanı sil?",
       content: "Bu əməliyyat geri qaytarılmır.",

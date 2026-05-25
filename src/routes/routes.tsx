@@ -1,6 +1,8 @@
-import Home from "../pages/home/Home";
-import Products from "../pages/products/Products";
-import Categories from "../pages/categories/Categories";
+import { lazy } from "react";
+
+const Home = lazy(() => import("../pages/home/Home"));
+const Products = lazy(() => import("../pages/products/Products"));
+const Categories = lazy(() => import("../pages/categories/Categories"));
 
 export const privateRoutes = [
   { path: "/", element: <Home /> },

@@ -1,4 +1,4 @@
-
+import React from "react";
 import { Alert, App, Button, Empty, Spin } from "antd";
 import ProductService from "../../services/ProductService";
 import type { Product } from "../../types/product.type";
@@ -35,9 +35,9 @@ export default function Products() {
     },
   });
 
-  const categoryOptions = categories.map((category) => ({
-    value: category.id,
-    label: category.name,
+  const categoryOptions = categories.map((c) => ({
+    label: c.name,
+    value: c.id,
   }));
 
   const deleteProduct = (product: Product) => {
