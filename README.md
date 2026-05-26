@@ -1,6 +1,17 @@
 # Admin Panel
 
-Bu layihə React, TypeScript, Redux Toolkit, React Router, Ant Design və Tailwind CSS ilə hazırlanmış admin paneldir. Panel məhsulların və kateqoriyaların idarə olunması, istifadəçi autentifikasiyası, dashboard statistikaları və məhsul şəkillərinin yüklənməsi üçün istifadə olunur.
+React, TypeScript və Vite ilə hazırlanmış admin panel. Layihə məhsul və kateqoriya idarəçiliyi, autentifikasiya, dashboard statistikaları və məhsul şəkillərinin yüklənməsi üçün istifadə olunur.
+
+## Mündəricat
+
+- [Texnologiyalar](#texnologiyalar)
+- [Başlamaq](#başlamaq)
+- [Environment dəyişənləri](#environment-dəyişənləri)
+- [NPM skriptləri](#npm-skriptləri)
+- [Layihə strukturu](#layihə-strukturu)
+- [Əsas funksionallıqlar](#əsas-funksionallıqlar)
+- [Arxitektura qeydləri](#arxitektura-qeydləri)
+- [API endpointləri](#api-endpointləri)
 
 ## Texnologiyalar
 
@@ -14,73 +25,89 @@ Bu layihə React, TypeScript, Redux Toolkit, React Router, Ant Design və Tailwi
 - Tailwind CSS
 - Axios
 
-## Quraşdırma
+## Başlamaq
+
+Repo-nu klonladıqdan sonra dependency-ləri quraşdırın:
 
 ```bash
 npm install
 ```
 
-Layihəni development rejimində işə salmaq:
+Environment faylını yaradın:
+
+```bash
+cp .env.example .env
+```
+
+Development serverini işə salın:
 
 ```bash
 npm run dev
 ```
 
-Production build yaratmaq:
+Vite serveri adətən bu ünvanda açılır:
 
-```bash
-npm run build
+```txt
+http://localhost:5173
 ```
 
-Build nəticəsini yoxlamaq:
+## Environment dəyişənləri
 
-```bash
-npm run preview
-```
-
-## Environment
-
-Layihədə backend ünvanı `.env` faylından oxunur.
+Layihə backend ünvanını `.env` faylından oxuyur.
 
 ```env
 VITE_API_URL=http://161.97.154.119/intern-api/api
 ```
 
-Bu dəyər `src/services/axiosInstance.ts` faylında `baseURL` kimi istifadə olunur. Bütün API sorğuları bu axios instance üzərindən göndərilir.
+Bu dəyər [`src/services/axiosInstance.ts`](src/services/axiosInstance.ts) faylında `baseURL` kimi istifadə olunur. Bütün API sorğuları ortaq Axios instance üzərindən göndərilir.
+
+## NPM skriptləri
+
+| Komanda | Təsvir |
+| --- | --- |
+| `npm run dev` | Development serverini başladır |
+| `npm run build` | TypeScript yoxlaması edir və production build yaradır |
+| `npm run preview` | Production build nəticəsini lokalda göstərir |
+| `npm run lint` | ESLint yoxlamasını işə salır |
 
 ## Layihə strukturu
 
 ```txt
 src/
-  components/
-    Layout.tsx
-  pages/
+  components/          Ümumi layout və paylaşılan komponentlər
+  hooks/               Ümumi custom hook-lar
+  pages/               Səhifələr və həmin səhifələrə aid hook/komponentlər
+    categories/
     home/
     login/
     products/
-    categories/
-  routes/
-    routes.tsx
-    PrivateRoutes.tsx
-    PublicRoutes.tsx
-  services/
-    axiosInstance.ts
-    AuthService.ts
-    ProductService.ts
-    CategoryService.ts
-    DashboardService.ts
-    UploadService.ts
-  store/
-    store.ts
-    hooks.ts
-    authSlice.ts
-  types/
-  utils/
+  providers/           App səviyyəli provider-lər
+  routes/              Public/private route konfiqurasiyası
+  services/            API servis qatları
+  store/               Redux store, slice və typed hook-lar
+  types/               TypeScript type-ları
+  utils/               Auth storage, asset URL və helper funksiyalar
 ```
 
-## Router məntiqi
+## Əsas funksionallıqlar
 
-Router sadə saxlanılıb. Private səhifələr `src/routes/routes.tsx` içində bir massivdə toplanıb.
+- Login, register və email verification flow
+- Protected routes və public routes ayrımı
+- Redux əsaslı auth state idarəçiliyi
+- Access token əlavə edilməsi və refresh token mexanizmi
+- Dashboard statistikaları
+- Məhsullar üçün CRUD əməliyyatları
+- Kateqoriyalar üçün CRUD əməliyyatları
+- Məhsul şəkillərinin yüklənməsi
+- Search, filter və pagination
+- Böyük ekranlarda table, kiçik ekranlarda card əsaslı responsive görünüş
+- Ant Design komponentləri ilə form, modal, table və notification idarəçiliyi
+
+## Arxitektura qeydləri
+
+### Routing
+
+Private səhifələr [`src/routes/routes.tsx`](src/routes/routes.tsx) faylında saxlanılır:
 
 ```tsx
 export const privateRoutes = [
@@ -90,11 +117,11 @@ export const privateRoutes = [
 ];
 ```
 
-`App.tsx` Redux store-dakı auth vəziyyətinə baxır. İstifadəçi login olubsa private routes, login olmayıbsa public routes göstərilir.
+[`src/App.tsx`](src/App.tsx) auth vəziyyətinə əsasən public və ya private route-ları render edir.
 
-## Redux və auth
+### Auth
 
-Auth məlumatları `src/store/authSlice.ts` içində saxlanılır:
+Auth məlumatları [`src/store/authSlice.ts`](src/store/authSlice.ts) içində saxlanılır:
 
 - `accessToken`
 - `refreshToken`
@@ -104,196 +131,88 @@ Auth məlumatları `src/store/authSlice.ts` içində saxlanılır:
 - `loading`
 - `error`
 
-Login uğurlu olanda tokenlər və user məlumatı Redux state-ə yazılır və `localStorage`-da saxlanılır. Səhifə refresh olunanda `src/utils/authStorage.ts` həmin məlumatları oxuyur və auth state yenidən qurulur.
+Login uğurlu olduqda tokenlər və user məlumatı Redux state-ə yazılır, həmçinin `localStorage`-da saxlanılır. Səhifə yenilənəndə [`src/utils/authStorage.ts`](src/utils/authStorage.ts) həmin məlumatları oxuyur.
 
-## Axios instance
+### Axios
 
-`src/services/axiosInstance.ts` bütün API sorğuları üçün ortaq axios konfiqurasiyasıdır.
+[`src/services/axiosInstance.ts`](src/services/axiosInstance.ts) bütün API sorğuları üçün ortaq konfiqurasiyadır.
 
-Əsas işi:
+Əsas davranışlar:
 
 - `VITE_API_URL` dəyərini `baseURL` kimi istifadə edir.
-- Hər sorğuya access token əlavə edir.
-- `401` cavabı gələndə refresh token ilə yeni token almağa çalışır.
-- Refresh uğursuz olsa, auth storage təmizlənir və istifadəçi login səhifəsinə yönləndirilir.
+- Access token varsa, hər sorğuya `Authorization: Bearer <token>` header-i əlavə edir.
+- `401` cavabı gəldikdə refresh token ilə yeni token almağa çalışır.
+- Refresh uğursuz olduqda auth storage təmizlənir və istifadəçi `/login` səhifəsinə yönləndirilir.
 
-## Login səhifəsi
+### Səhifə məntiqi
 
-Login hissəsi `src/pages/login` qovluğundadır.
+Səhifə məntiqi mümkün qədər custom hook-lara çıxarılıb:
 
-Burada üç əsas flow var:
+- Dashboard statistikaları: [`src/pages/home/hooks/useDashboardStats.ts`](src/pages/home/hooks/useDashboardStats.ts)
+- Məhsul siyahısı: [`src/pages/products/hooks/useProductList.ts`](src/pages/products/hooks/useProductList.ts)
+- Məhsul formu: [`src/pages/products/hooks/useProductForm.ts`](src/pages/products/hooks/useProductForm.ts)
+- Kateqoriya siyahısı: [`src/pages/categories/hooks/useCategoryList.ts`](src/pages/categories/hooks/useCategoryList.ts)
+- Kateqoriya formu: [`src/pages/categories/hooks/useCategoryForm.ts`](src/pages/categories/hooks/useCategoryForm.ts)
+- Login flow: [`src/pages/login/hooks/useLoginFlow.ts`](src/pages/login/hooks/useLoginFlow.ts)
 
-- Login
-- Register
-- Email verify code
-
-Bu flow-ların əsas məntiqi `src/pages/login/hooks/useLoginFlow.ts` içindədir. Komponentlər isə ayrıca saxlanılıb:
-
-- `LoginForm.tsx`
-- `RegisterForm.tsx`
-- `VerifyForm.tsx`
-- `LoginHero.tsx`
-
-Bu struktur komponentləri sadə saxlayır, form əməliyyatlarını isə hook içində toplayır.
-
-## Layout və sidebar
-
-`src/components/Layout.tsx` admin panelin əsas görünüşünü qurur:
-
-- Sidebar
-- Header
-- User adı və email
-- Logout düyməsi
-- Page content
-
-Sidebar children məntiqi ilə işləyir. Private səhifələr bu layout içində göstərilir.
-
-## Dashboard
-
-Dashboard səhifəsi `src/pages/home/Home.tsx` faylıdır.
-
-Burada göstərilən əsas məlumatlar:
-
-- Kateqoriya sayı
-- Məhsul sayı
-- İstifadəçi sayı
-- Ümumi stok
-- Az stok
-- İnventar dəyəri
-- Son əlavə olunan məhsul
-
-Data `DashboardService.getStats()` ilə backend-dən gəlir. Hook olaraq `src/pages/home/hooks/useDashboardStats.ts` istifadə olunur.
-
-Son məhsul kartı ayrıca komponentdir:
-
-```txt
-src/pages/home/components/LatestProductCard.tsx
-```
-
-Bu kart məhsulun adını, şəkilini, kateqoriyasını, qiymətini, stokunu və statusunu göstərir. ID istifadəçiyə göstərilmir.
-
-## Products səhifəsi
-
-Products hissəsi `src/pages/products` qovluğundadır.
-
-Əsas fayllar:
-
-- `Products.tsx`
-- `components/ProductsHeader.tsx`
-- `components/ProductsTable.tsx`
-- `components/ProductFormModal.tsx`
-- `hooks/useProductList.ts`
-- `hooks/useProductForm.ts`
-
-`useProductList.ts` məhsulların siyahısını, pagination-u, search-u və category filter-i idarə edir.
-
-`useProductForm.ts` create/edit modalının məntiqini saxlayır:
-
-- yeni məhsul yaratmaq
-- məhsulu redaktə etmək
-- şəkil seçmək
-- şəkil yükləmək
-- şəkil silmək
-- form payload hazırlamaq
-
-Edit zamanı məhsulun id-si varsa, backend-dən təmiz data götürülür:
-
-```txt
-GET /products/:id
-```
-
-Save zamanı:
-
-```txt
-PATCH /products/:id
-```
-
-Create zamanı:
-
-```txt
-POST /products
-```
-
-Şəkil upload üçün:
-
-```txt
-POST /uploads/product-images
-```
-
-## Categories səhifəsi
-
-Categories hissəsi `src/pages/categories` qovluğundadır.
-
-Əsas fayllar:
-
-- `Categories.tsx`
-- `components/CategoryFormModal.tsx`
-- `hooks/useCategoryList.ts`
-- `hooks/useCategoryForm.ts`
-
-`useCategoryList.ts` kateqoriya siyahısını, search və pagination məntiqini idarə edir.
-
-`useCategoryForm.ts` create/edit modalının məntiqini saxlayır. Əgər edit zamanı category id varsa, backend-dən detail data götürülür:
-
-```txt
-GET /categories/:id
-```
-
-Save zamanı:
-
-```txt
-PATCH /categories/:id
-```
-
-Create zamanı:
-
-```txt
-POST /categories
-```
-
-## Create və edit modal məntiqi
-
-Product və category üçün create/edit modal ayrı-ayrı deyil, eyni komponentdən gəlir.
-
-Məntiq belədir:
+Create və edit modal-ları eyni komponent üzərindən işləyir:
 
 ```txt
 id varsa -> edit mode
 id yoxdursa -> create mode
 ```
 
-Bu yanaşma kod təkrarını azaldır və modalın oxunaqlığını artırır.
+## API endpointləri
 
-## Responsive görünüş
+### Auth
 
-Products və Categories səhifələrində böyük ekranda cədvəl, kiçik ekranda card görünüşü istifadə olunur.
+| Method | Endpoint | Məqsəd |
+| --- | --- | --- |
+| `POST` | `/auth/register` | Yeni istifadəçi qeydiyyatı |
+| `POST` | `/auth/verify-email` | Email verification kodunun yoxlanması |
+| `POST` | `/auth/resend-verification-code` | Verification kodunun yenidən göndərilməsi |
+| `POST` | `/auth/login` | Login |
+| `POST` | `/auth/logout` | Logout |
+| `GET` | `/auth/profile` | Cari istifadəçi məlumatı |
+| `POST` | `/auth/refresh` | Token yeniləmə |
 
-Bu, kiçik pəncərədə horizontal scroll probleminin qarşısını alır və mobil görünüşü daha rahat edir.
+### Dashboard
 
-## Əsas funksionallıqlar
+| Method | Endpoint | Məqsəd |
+| --- | --- | --- |
+| `GET` | `/dashboard/stats` | Dashboard statistikalarını gətirir |
 
-- Login
-- Register
-- Email verify code
-- Logout
-- Protected routes
-- Redux auth state
-- Token refresh
-- Dashboard stats
-- Son əlavə olunan məhsul kartı
-- Products CRUD
-- Categories CRUD
-- Product image upload
-- Search
-- Filter
-- Pagination
-- Responsive table/card görünüşü
+### Products
+
+| Method | Endpoint | Məqsəd |
+| --- | --- | --- |
+| `GET` | `/products` | Məhsul siyahısı |
+| `GET` | `/products/:id` | Məhsul detalları |
+| `POST` | `/products` | Yeni məhsul yaratmaq |
+| `PATCH` | `/products/:id` | Məhsulu yeniləmək |
+| `DELETE` | `/products/:id` | Məhsulu silmək |
+
+### Categories
+
+| Method | Endpoint | Məqsəd |
+| --- | --- | --- |
+| `GET` | `/categories` | Kateqoriya siyahısı |
+| `GET` | `/categories/options` | Select üçün kateqoriya seçimləri |
+| `GET` | `/categories/:id` | Kateqoriya detalları |
+| `POST` | `/categories` | Yeni kateqoriya yaratmaq |
+| `PATCH` | `/categories/:id` | Kateqoriyanı yeniləmək |
+| `DELETE` | `/categories/:id` | Kateqoriyanı silmək |
+
+### Upload
+
+| Method | Endpoint | Məqsəd |
+| --- | --- | --- |
+| `POST` | `/uploads/product-images` | Məhsul şəkillərini yükləmək |
 
 ## Faydalı qeydlər
 
-- API sorğuları `services` qovluğunda saxlanılır.
-- Form və səhifə məntiqi mümkün qədər custom hook-lara çıxarılıb.
-- UI komponentləri `components` qovluqlarında ayrıca saxlanılır.
-- Auth məlumatları Redux və localStorage ilə idarə olunur.
-- Ant Design modal, table, form, button və notification komponentləri üçün istifadə olunur.
-- Tailwind CSS layout və responsive görünüş üçün istifadə olunur.
+- API-lə bağlı əməliyyatlar `src/services` qovluğunda saxlanılır.
+- UI və səhifə məntiqi ayrı saxlanıldığı üçün komponentlər daha oxunaqlıdır.
+- Ant Design form, modal, table və notification komponentləri üçün istifadə olunur.
+- Tailwind CSS layout, spacing və responsive görünüş üçün istifadə olunur.
+- Build prosesi əvvəlcə TypeScript yoxlamasını, sonra Vite build mərhələsini icra edir.

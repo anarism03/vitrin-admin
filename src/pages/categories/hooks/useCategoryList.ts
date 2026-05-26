@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import CategoryService from "../../../services/CategoryService";
 import type { Category } from "../../../types/category.type";
@@ -22,7 +22,7 @@ export function useCategoryList() {
   const pageSize = Number(searchParams.get("pageSize")) || 10;
   const searchText = searchParams.get("search") || "";
 
-  const fetchCategories = async (overrides: FetchOverrides = {}) => {
+  const fetchCategories = useCallback(async (overrides: FetchOverrides = {}) => {
     const nextPage = overrides.page ?? page;
     const nextPageSize = overrides.pageSize ?? pageSize;
     const nextSearchText = overrides.searchText ?? searchText;
@@ -45,12 +45,11 @@ export function useCategoryList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, searchText]);
 
   useEffect(() => {
     void fetchCategories();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, searchText]);
+  }, [fetchCategories]);
 
   const updateSearchText = (value: string) => {
     setSearchParams(
