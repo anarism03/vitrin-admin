@@ -119,7 +119,10 @@ export function useLoginFlow() {
       openVerifyForm(values.email);
       message.success("Tesdiq kodu gonderildi");
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 409) {
+      if (
+        axios.isAxiosError(err) &&
+        [409, 500].includes(err.response?.status || 0)
+      ) {
         await AuthService.resendVerifyCode({ email: values.email });
         openVerifyForm(values.email);
         message.warning("Bu email artiq qeydiyyatdadir. Tesdiq kodu yeniden gonderildi.");
