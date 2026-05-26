@@ -24,13 +24,12 @@ const readRequestBody = async (req) => {
 };
 
 export default async function handler(req, res) {
-  const path = Array.isArray(req.query.path)
-    ? req.query.path.join("/")
-    : req.query.path || "";
-
   const incomingUrl = new URL(req.url || "/", "https://vitrin-admin.vercel.app");
+  const path = incomingUrl.searchParams.get("path") || "";
+  incomingUrl.searchParams.delete("path");
+
   const backendUrl = new URL(`${BACKEND_URL.replace(/\/$/, "")}/${path}`);
-  backendUrl.search = incomingUrl.search;
+  backendUrl.search = incomingUrl.searchParams.toString();
 
   const headers = new Headers();
   for (const [key, value] of Object.entries(req.headers)) {
