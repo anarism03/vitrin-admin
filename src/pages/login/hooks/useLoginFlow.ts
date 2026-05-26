@@ -123,8 +123,12 @@ export function useLoginFlow() {
         axios.isAxiosError(err) &&
         [409, 500].includes(err.response?.status || 0)
       ) {
-        await AuthService.resendVerifyCode({ email: values.email });
         openVerifyForm(values.email);
+        try {
+          await AuthService.resendVerifyCode({ email: values.email });
+        } catch {
+          // The user may already have a valid OTP from the first register attempt.
+        }
         message.warning("Bu email artiq qeydiyyatdadir. Tesdiq kodu yeniden gonderildi.");
         return;
       }
