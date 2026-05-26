@@ -1,4 +1,7 @@
-const BACKEND_URL = "http://161.97.154.119/intern-api/api";
+import http from "node:http";
+
+const BACKEND_HOST = "161.97.154.119";
+const BACKEND_PREFIX = "/intern-api/api";
 
 export const config = {
   api: {
@@ -14,20 +17,20 @@ const blockedRequestHeaders = new Set([
 
 const blockedResponseHeaders = new Set([
   "connection",
-  "content-encoding",
   "content-length",
   "transfer-encoding",
 ]);
 
-const readRequestBody = async (req) => {
-  const chunks = [];
+const readRequestBody = (req) =>
+  new Promise((resolve, reject) => {
+    const chunks = [];
 
-  for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-
-  return Buffer.concat(chunks);
-};
+    req.on("data", (chunk) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
 
 export default async function handler(req, res) {
   try {
@@ -35,32 +38,62 @@ export default async function handler(req, res) {
     const path = incomingUrl.searchParams.get("path") || "";
     incomingUrl.searchParams.delete("path");
 
-    const backendUrl = new URL(`${BACKEND_URL.replace(/\/$/, "")}/${path}`);
-    backendUrl.search = incomingUrl.searchParams.toString();
+    const body = ["GET", "HEAD"].includes(req.method || "GET")
+      ? null
+      : await readRequestBody(req);
 
-    const headers = new Headers();
+    const headers = {};
     for (const [key, value] of Object.entries(req.headers)) {
       if (!blockedRequestHeaders.has(key.toLowerCase()) && value) {
-        headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+        headers[key] = Array.isArray(value) ? value.join(", ") : value;
       }
     }
 
-    const hasBody = !["GET", "HEAD"].includes(req.method || "GET");
-    const backendResponse = await fetch(backendUrl, {
-      method: req.method,
-      headers,
-      body: hasBody ? await readRequestBody(req) : undefined,
+    if (body) {
+      headers["content-length"] = String(body.length);
+    }
+
+    const backendPath = `${BACKEND_PREFIX}/${path}${incomingUrl.search}`;
+
+    const backendResponse = await new Promise((resolve, reject) => {
+      const proxyReq = http.request(
+        {
+          hostname: BACKEND_HOST,
+          port: 80,
+          path: backendPath,
+          method: req.method,
+          headers,
+        },
+        (proxyRes) => {
+          const chunks = [];
+
+          proxyRes.on("data", (chunk) => chunks.push(chunk));
+          proxyRes.on("end", () => {
+            resolve({
+              statusCode: proxyRes.statusCode || 500,
+              headers: proxyRes.headers,
+              body: Buffer.concat(chunks),
+            });
+          });
+        },
+      );
+
+      proxyReq.on("error", reject);
+      proxyReq.setTimeout(20000, () => {
+        proxyReq.destroy(new Error("Backend request timed out"));
+      });
+
+      if (body) proxyReq.write(body);
+      proxyReq.end();
     });
 
-    res.statusCode = backendResponse.status;
-    backendResponse.headers.forEach((value, key) => {
-      if (!blockedResponseHeaders.has(key.toLowerCase())) {
+    res.statusCode = backendResponse.statusCode;
+    for (const [key, value] of Object.entries(backendResponse.headers)) {
+      if (!blockedResponseHeaders.has(key.toLowerCase()) && value) {
         res.setHeader(key, value);
       }
-    });
-
-    const responseBody = Buffer.from(await backendResponse.arrayBuffer());
-    res.end(responseBody);
+    }
+    res.end(backendResponse.body);
   } catch (error) {
     res.statusCode = 502;
     res.setHeader("Content-Type", "application/json;charset=utf-8");
