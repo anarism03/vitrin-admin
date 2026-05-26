@@ -3,6 +3,10 @@
     {
       "source": "/intern-api/api/:path*",
       "destination": "http://161.97.154.119/intern-api/api/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/"
     }
   ]
 }

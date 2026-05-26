@@ -1,7 +1,8 @@
 import { Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { Spin } from "antd";
 import Layout from "../components/Layout";
+import ErrorPage from "../pages/error/ErrorPage";
 import { privateRoutes } from "./routes";
 
 export default function PrivateRoutes() {
@@ -20,7 +21,14 @@ export default function PrivateRoutes() {
           }
         />
       ))}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="*"
+        element={
+          <Layout>
+            <ErrorPage />
+          </Layout>
+        }
+      />
     </Routes>
   );
 }
