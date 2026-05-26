@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { App, Form } from "antd";
+import axios from "axios";
 import AuthService from "../../../services/AuthService";
 import { setAuthSession, setAuthUser } from "../../../store/authSlice";
 import { useAppDispatch } from "../../../store/hooks";
@@ -116,8 +117,15 @@ export function useLoginFlow() {
     try {
       await AuthService.register(values);
       openVerifyForm(values.email);
-      message.success("Təsdiq kodu göndərildi");
+      message.success("Tesdiq kodu gonderildi");
     } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        await AuthService.resendVerifyCode({ email: values.email });
+        openVerifyForm(values.email);
+        message.warning("Bu email artiq qeydiyyatdadir. Tesdiq kodu yeniden gonderildi.");
+        return;
+      }
+
       message.error(getErrorMessage(err, "Qeydiyyat zamanı xəta baş verdi."));
     } finally {
       setLoading(false);
