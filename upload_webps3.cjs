@@ -1,11 +1,7 @@
 const axios = require('axios');
-const fs = require('fs');
 const FormData = require('form-data');
 const sharp = require('sharp');
-
-const API_URL = 'http://161.97.154.119/intern-api/api';
-const EMAIL = 'ismayilzadeanar310@gmail.com';
-const PASSWORD = '02112003aaA';
+const { API_URL, getAdminCredentials } = require('./scriptConfig.cjs');
 
 const keywords = {
   "Apple iPhone 15 Pro Max": "iphone",
@@ -43,7 +39,11 @@ const keywords = {
 async function run() {
   try {
     console.log('Logging in...');
-    const loginRes = await axios.post(`${API_URL}/auth/login`, { email: EMAIL, password: PASSWORD });
+    const credentials = getAdminCredentials();
+    const loginRes = await axios.post(`${API_URL}/auth/login`, {
+      email: credentials.email,
+      password: credentials.password
+    });
     let token = loginRes.data?.data?.accessToken || loginRes.data?.accessToken || loginRes.data?.data?.access_token || loginRes.data?.access_token;
     
     if (!token) throw new Error("Token missing");

@@ -1,8 +1,5 @@
 const axios = require('axios');
-
-const API_URL = 'http://161.97.154.119/intern-api/api';
-const EMAIL = 'ismayilzadeanar310@gmail.com';
-const PASSWORD = '02112003aaA';
+const { API_URL, getAdminCredentials } = require('./scriptConfig.cjs');
 
 const translations = {
   "0fb911e0-111d-49fb-8b42-c113e60ec12b": "Ağıllı Ev", // Smart Home
@@ -15,7 +12,11 @@ const translations = {
 
 async function run() {
   try {
-    const loginRes = await axios.post(`${API_URL}/auth/login`, { email: EMAIL, password: PASSWORD });
+    const credentials = getAdminCredentials();
+    const loginRes = await axios.post(`${API_URL}/auth/login`, {
+      email: credentials.email,
+      password: credentials.password
+    });
     let token = loginRes.data?.data?.accessToken || loginRes.data?.accessToken || loginRes.data?.data?.access_token || loginRes.data?.access_token;
     
     const axiosInstance = axios.create({
