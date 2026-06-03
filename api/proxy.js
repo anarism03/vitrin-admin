@@ -6,6 +6,25 @@ const BACKEND_PREFIXES = {
   uploads: "/intern-api/uploads",
 };
 
+const API_ALLOWLIST = [
+  {
+    methods: ["POST"],
+    pattern: /^auth\/(register|verify-email|resend-verification-code|login|logout|refresh)$/,
+  },
+  { methods: ["GET"], pattern: /^auth\/profile$/ },
+  { methods: ["GET"], pattern: /^dashboard\/stats$/ },
+  { methods: ["GET", "POST"], pattern: /^products$/ },
+  { methods: ["GET", "PATCH", "DELETE"], pattern: /^products\/[^/]+$/ },
+  { methods: ["GET"], pattern: /^categories\/options$/ },
+  { methods: ["GET", "POST"], pattern: /^categories$/ },
+  { methods: ["GET", "PATCH", "DELETE"], pattern: /^categories\/[^/]+$/ },
+  { methods: ["POST"], pattern: /^uploads\/product-images$/ },
+];
+
+const UPLOADS_ALLOWLIST = [
+  { methods: ["GET", "HEAD"], pattern: /^products\/[A-Za-z0-9._/-]+$/ },
+];
+
 export const config = {
   api: {
     bodyParser: false,
@@ -24,6 +43,37 @@ const blockedResponseHeaders = new Set([
   "transfer-encoding",
 ]);
 
+const sendJson = (res, statusCode, payload) => {
+  res.statusCode = statusCode;
+  res.setHeader("Content-Type", "application/json;charset=utf-8");
+  res.end(JSON.stringify(payload));
+};
+
+const normalizeMethod = (method) => (method || "GET").toUpperCase();
+
+const isSafePath = (path) =>
+  Boolean(path) && !path.includes("..") && !path.startsWith("/");
+
+const isAllowedByRules = (rules, method, path) =>
+  rules.some(
+    (rule) => rule.methods.includes(method) && rule.pattern.test(path),
+  );
+
+const isAllowedRequest = (target, method, path) => {
+  if (method === "OPTIONS") return true;
+  if (!isSafePath(path)) return false;
+
+  if (target === "uploads") {
+    return isAllowedByRules(UPLOADS_ALLOWLIST, method, path);
+  }
+
+  if (target === "api") {
+    return isAllowedByRules(API_ALLOWLIST, method, path);
+  }
+
+  return false;
+};
+
 const readRequestBody = (req) =>
   new Promise((resolve, reject) => {
     const chunks = [];
@@ -40,12 +90,24 @@ export default async function handler(req, res) {
     const incomingUrl = new URL(req.url || "/", "https://vitrin-admin.vercel.app");
     const target = incomingUrl.searchParams.get("target") || "api";
     const path = incomingUrl.searchParams.get("path") || "";
+    const method = normalizeMethod(req.method);
     const backendPrefix = BACKEND_PREFIXES[target] || BACKEND_PREFIXES.api;
+
+    if (method === "OPTIONS") {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
+
+    if (!isAllowedRequest(target, method, path)) {
+      sendJson(res, 404, { message: "Proxy route is not allowed" });
+      return;
+    }
 
     incomingUrl.searchParams.delete("target");
     incomingUrl.searchParams.delete("path");
 
-    const body = ["GET", "HEAD"].includes(req.method || "GET")
+    const body = ["GET", "HEAD"].includes(method)
       ? null
       : await readRequestBody(req);
 
@@ -68,7 +130,7 @@ export default async function handler(req, res) {
           hostname: BACKEND_HOST,
           port: 80,
           path: backendPath,
-          method: req.method,
+          method,
           headers,
         },
         (proxyRes) => {
@@ -102,13 +164,9 @@ export default async function handler(req, res) {
     }
     res.end(backendResponse.body);
   } catch (error) {
-    res.statusCode = 502;
-    res.setHeader("Content-Type", "application/json;charset=utf-8");
-    res.end(
-      JSON.stringify({
-        message: "Proxy request failed",
-        error: error instanceof Error ? error.message : String(error),
-      }),
-    );
+    sendJson(res, 502, {
+      message: "Proxy request failed",
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }

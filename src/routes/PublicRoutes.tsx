@@ -1,5 +1,4 @@
-import { Route, Routes } from "react-router-dom";
-import ErrorPage from "../pages/error/ErrorPage";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "../pages/login/Login";
 
 export default function PublicRoutes() {
@@ -7,7 +6,7 @@ export default function PublicRoutes() {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
-      <Route path="*" element={<ErrorPage />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
