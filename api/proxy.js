@@ -1,7 +1,10 @@
 import http from "node:http";
 
 const BACKEND_HOST = "161.97.154.119";
-const BACKEND_PREFIX = "/intern-api/api";
+const BACKEND_PREFIXES = {
+  api: "/intern-api/api",
+  uploads: "/intern-api/uploads",
+};
 
 export const config = {
   api: {
@@ -35,7 +38,11 @@ const readRequestBody = (req) =>
 export default async function handler(req, res) {
   try {
     const incomingUrl = new URL(req.url || "/", "https://vitrin-admin.vercel.app");
+    const target = incomingUrl.searchParams.get("target") || "api";
     const path = incomingUrl.searchParams.get("path") || "";
+    const backendPrefix = BACKEND_PREFIXES[target] || BACKEND_PREFIXES.api;
+
+    incomingUrl.searchParams.delete("target");
     incomingUrl.searchParams.delete("path");
 
     const body = ["GET", "HEAD"].includes(req.method || "GET")
@@ -53,7 +60,7 @@ export default async function handler(req, res) {
       headers["content-length"] = String(body.length);
     }
 
-    const backendPath = `${BACKEND_PREFIX}/${path}${incomingUrl.search}`;
+    const backendPath = `${backendPrefix}/${path}${incomingUrl.search}`;
 
     const backendResponse = await new Promise((resolve, reject) => {
       const proxyReq = http.request(

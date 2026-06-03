@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/intern-api/uploads/:path*",
+      "destination": "/api/proxy?target=uploads&path=:path*"
+    },
+    {
       "source": "/intern-api/api/:path*",
       "destination": "/api/proxy?path=:path*"
     },

@@ -1,5 +1,7 @@
 import { API_URL } from "../services/apiUrl";
 
+const INTERN_API_PREFIX = "/intern-api";
+
 const getApiOrigin = () => {
   try {
     return new URL(API_URL).origin;
@@ -8,15 +10,39 @@ const getApiOrigin = () => {
   }
 };
 
+const normalizeAssetPath = (url: string) => {
+  if (url.startsWith("/")) {
+    return url.startsWith("/uploads/")
+      ? `${INTERN_API_PREFIX}${url}`
+      : url;
+  }
+
+  if (url.startsWith("intern-api/")) {
+    return `/${url}`;
+  }
+
+  if (url.startsWith("uploads/")) {
+    return `${INTERN_API_PREFIX}/${url}`;
+  }
+
+  return url;
+};
+
 export function resolveAssetUrl(url?: string | null) {
   if (!url) return "";
 
   if (/^https?:\/\//i.test(url)) {
+    if (window.location.protocol === "https:" && /^http:\/\//i.test(url)) {
+      const parsedUrl = new URL(url);
+      return `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+    }
+
     return url;
   }
 
+  const assetPath = normalizeAssetPath(url);
   const origin = getApiOrigin();
-  if (!origin) return url;
+  if (!origin) return assetPath;
 
-  return new URL(url, origin).toString();
+  return new URL(assetPath, origin).toString();
 }
