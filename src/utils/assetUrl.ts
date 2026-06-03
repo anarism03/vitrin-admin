@@ -1,6 +1,17 @@
 import { API_URL } from "../services/apiUrl";
 
 const INTERN_API_PREFIX = "/intern-api";
+const DEFAULT_BACKEND_ORIGIN = "http://161.97.154.119";
+
+const getBackendAssetOrigin = () => {
+  const configuredApiUrl = import.meta.env.VITE_API_URL?.trim() || "";
+
+  try {
+    return configuredApiUrl ? new URL(configuredApiUrl).origin : DEFAULT_BACKEND_ORIGIN;
+  } catch {
+    return DEFAULT_BACKEND_ORIGIN;
+  }
+};
 
 const getApiOrigin = () => {
   try {
@@ -43,6 +54,17 @@ export function getUploadedAssetPath(url?: string | null) {
   }
 
   return normalizeAssetPath(url);
+}
+
+export function getUploadedAssetUrl(url?: string | null) {
+  const assetPath = getUploadedAssetPath(url);
+  if (!assetPath) return "";
+
+  if (/^https?:\/\//i.test(assetPath)) {
+    return assetPath;
+  }
+
+  return new URL(assetPath, getBackendAssetOrigin()).toString();
 }
 
 export function resolveAssetUrl(url?: string | null) {

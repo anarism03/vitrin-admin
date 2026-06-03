@@ -1,20 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardService from "../../../services/DashboardService";
 import type { DashboardStats } from "../../../types/dashboard.type";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 
-export function useDashboardStats(enabled = true) {
+export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(enabled);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const fetchStats = useCallback(async () => {
-    if (!enabled) {
-      setStats(null);
-      setError("");
-      setLoading(false);
-      return;
-    }
-
+  const fetchStats = async () => {
     setLoading(true);
     setError("");
 
@@ -26,11 +19,11 @@ export function useDashboardStats(enabled = true) {
     } finally {
       setLoading(false);
     }
-  }, [enabled]);
+  };
 
   useEffect(() => {
     void fetchStats();
-  }, [fetchStats]);
+  }, []);
 
   return {
     stats,

@@ -24,10 +24,7 @@ const statIcons = [
 
 export default function Home() {
   const user = useAppSelector((state) => state.auth.user);
-  const canViewDashboardStats = user?.role === "admin";
-  const { stats, loading, error, fetchStats } = useDashboardStats(
-    canViewDashboardStats,
-  );
+  const { stats, loading, error, fetchStats } = useDashboardStats();
   const displayName = getUserDisplayName(user);
   const latestProduct = stats?.latestProducts?.[0];
 
@@ -59,7 +56,6 @@ export default function Home() {
           <Button
             icon={<ReloadOutlined />}
             loading={loading}
-            disabled={!canViewDashboardStats}
             onClick={fetchStats}
           >
             Yenilə
@@ -76,7 +72,6 @@ export default function Home() {
             <Button
               size="small"
               danger
-              disabled={!canViewDashboardStats}
               onClick={fetchStats}
             >
               Təkrar yoxla
