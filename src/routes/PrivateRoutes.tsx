@@ -1,18 +1,9 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { Spin } from "antd";
 import Layout from "../components/Layout";
 import ErrorPage from "../pages/error/ErrorPage";
-
-const Home = lazy(() => import("../pages/home/Home"));
-const Products = lazy(() => import("../pages/products/Products"));
-const Categories = lazy(() => import("../pages/categories/Categories"));
-
-const privateRoutes = [
-  { path: "/", element: <Home /> },
-  { path: "/products", element: <Products /> },
-  { path: "/categories", element: <Categories /> },
-];
+import { privateRoutes } from "./routes";
 
 export default function PrivateRoutes() {
   return (
