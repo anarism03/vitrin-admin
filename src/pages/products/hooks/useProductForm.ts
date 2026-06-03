@@ -9,7 +9,7 @@ import type {
   ProductImage,
   ProductPayload,
 } from "../../../types/product.type";
-import { resolveAssetUrl } from "../../../utils/assetUrl";
+import { getUploadedAssetPath } from "../../../utils/assetUrl";
 import { getErrorMessage } from "../../../utils/getErrorMessage";
 
 const MAX_IMAGE_COUNT = 10;
@@ -178,6 +178,9 @@ export function useProductForm({ onSaved }: UseProductFormParams) {
         0,
         MAX_IMAGE_COUNT,
       );
+      const payloadImageUrls = nextImageUrls
+        .map(getUploadedAssetPath)
+        .filter(Boolean);
       const payload: ProductPayload = {
         name: values.name.trim(),
         description: values.description?.trim() || undefined,
@@ -186,12 +189,10 @@ export function useProductForm({ onSaved }: UseProductFormParams) {
         sku: values.sku.trim(),
         categoryId: values.categoryId,
         isActive: values.isActive ?? true,
-        imageUrl: nextImageUrls[0]
-          ? resolveAssetUrl(nextImageUrls[0])
-          : undefined,
+        imageUrl: payloadImageUrls[0] || undefined,
         images:
-          nextImageUrls.length || editingId
-            ? imagePayload(nextImageUrls)
+          payloadImageUrls.length || editingId
+            ? imagePayload(payloadImageUrls)
             : undefined,
       };
 

@@ -10,7 +10,7 @@ const getApiOrigin = () => {
   }
 };
 
-const normalizeAssetPath = (url: string) => {
+export const normalizeAssetPath = (url: string) => {
   if (url.startsWith("/")) {
     return url.startsWith("/uploads/")
       ? `${INTERN_API_PREFIX}${url}`
@@ -27,6 +27,23 @@ const normalizeAssetPath = (url: string) => {
 
   return url;
 };
+
+export function getUploadedAssetPath(url?: string | null) {
+  if (!url) return "";
+
+  if (/^https?:\/\//i.test(url)) {
+    try {
+      const parsedUrl = new URL(url);
+      return normalizeAssetPath(
+        `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`,
+      );
+    } catch {
+      return url;
+    }
+  }
+
+  return normalizeAssetPath(url);
+}
 
 export function resolveAssetUrl(url?: string | null) {
   if (!url) return "";
